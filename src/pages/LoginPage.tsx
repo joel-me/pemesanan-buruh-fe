@@ -6,7 +6,7 @@ import { Label } from "../components/ui/label";
 import { Card } from "../components/ui/card";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { loginUser } from "../lib/api"; // Pastikan fungsi loginUser sesuai dengan API Anda
+import { login } from "../lib/api";  // Mengimpor fungsi login yang benar
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
+    email: "",  // Menambahkan email ke formData
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,7 +33,7 @@ export default function LoginPage() {
 
     try {
       // Panggil API login
-      const response = await loginUser(formData);
+      const response = await login(formData);  // Menggunakan fungsi login yang benar
 
       // Simpan token dan user ke localStorage atau state manajemen
       localStorage.setItem("token", response.data.token);
@@ -72,6 +73,18 @@ export default function LoginPage() {
                 id="username"
                 name="username"
                 value={formData.username}
+                onChange={handleChange}
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>  {/* Menambahkan input untuk email */}
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
                 onChange={handleChange}
                 required
                 disabled={isLoading}
