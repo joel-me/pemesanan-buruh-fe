@@ -1,3 +1,5 @@
+// src/pages/LoginPage.tsx
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -14,7 +16,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     username: "",
-    password: "", // Tidak ada email
+    password: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,7 +33,7 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // Panggil API login
+      // Panggil API login dengan username dan password
       const response = await login(formData);  // Menggunakan fungsi login yang benar
 
       // Simpan token dan user ke localStorage atau state manajemen

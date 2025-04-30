@@ -70,7 +70,7 @@ export const createOrder = async (token: string, orderData: any): Promise<APIRes
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: token ? `Bearer ${token}` : '', // Hanya menambahkan Authorization jika token ada
     },
     body: JSON.stringify(orderData),
   });
@@ -81,7 +81,7 @@ export const createOrder = async (token: string, orderData: any): Promise<APIRes
 export const getMyOrders = async (token: string): Promise<APIResponse<Order[]>> => {
   const response = await fetch(`${API_BASE_URL}/orders/my-orders`, {
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: token ? `Bearer ${token}` : '', // Menambahkan header Authorization hanya jika token ada
     },
   });
 
@@ -91,7 +91,7 @@ export const getMyOrders = async (token: string): Promise<APIResponse<Order[]>> 
 export const getMyPlacedOrders = async (token: string): Promise<APIResponse<Order[]>> => {
   const response = await fetch(`${API_BASE_URL}/orders/my-placed-orders`, {
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: token ? `Bearer ${token}` : '', // Menambahkan header Authorization hanya jika token ada
     },
   });
 
@@ -107,7 +107,7 @@ export const updateOrderStatus = async (
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: token ? `Bearer ${token}` : '', // Hanya menambahkan Authorization jika token ada
     },
     body: JSON.stringify({ status }),
   });
