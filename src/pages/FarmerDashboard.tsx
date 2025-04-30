@@ -26,7 +26,7 @@ export default function FarmerDashboard() {
     const fetchOrders = async () => {
       setIsLoading(true);
       try {
-        const fetchedOrders = await getMyPlacedOrders(token);
+        const fetchedOrders = await getMyPlacedOrders(token); // Memanggil API untuk mengambil pesanan petani
         setOrders(fetchedOrders);
       } catch (err) {
         setError("Gagal memuat pesanan");
