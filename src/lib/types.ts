@@ -11,7 +11,11 @@ export type APIResponse<T> = {
       id: string;
       username: string;
       email: string;
-      role: 'farmer' | 'worker';
+      role: "farmer" | "laborer";
+      address: string;
+      phoneNumber: string;
+      landArea: number;
+      cropType: string;
     };
   };
   
@@ -19,7 +23,7 @@ export type APIResponse<T> = {
     id: string;
     description: string;
     createdAt: string;
-    status: 'pending' | 'accepted' | 'completed' | 'cancelled';
+    status: "pending" | "accepted" | "completed" | "cancelled";
     farmerId: string;
     laborerId: string;
   };
@@ -33,12 +37,21 @@ export type APIResponse<T> = {
     username: string;
     email: string;
     password: string;
+    address: string;       // Added address
+    phoneNumber: string;   // Added phoneNumber
+    landArea: number;      // Added landArea
+    cropType: string;      // Added cropType
   };
   
   export type RegisterLaborerDto = {
     username: string;
-    email: string;
     password: string;
-    skill: string;
+    confirmPassword: string;
+    email: string;
+    address: string;
+    phoneNumber: string;
+    age: number;
+    skills: string[];  // This needs to match
+    experience: string;
   };
   

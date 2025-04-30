@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "../components/ui/button"
@@ -23,7 +22,7 @@ export default function RegisterFarmerPage() {
     password: "",
     confirmPassword: "",
     email: "",
-    address: "",
+    address: "", // Added address
     phoneNumber: "",
     landArea: "",
     cropType: "",
@@ -50,15 +49,15 @@ export default function RegisterFarmerPage() {
         username: formData.username,
         password: formData.password,
         email: formData.email,
-        address: formData.address,
+        address: formData.address, // Passing address
         phoneNumber: formData.phoneNumber,
         landArea: Number.parseFloat(formData.landArea),
         cropType: formData.cropType,
       })
 
       // Store token and user info
-      localStorage.setItem("token", response.token)
-      localStorage.setItem("user", JSON.stringify(response.user))
+      localStorage.setItem("token", response.data.token) // Accessing token from API response
+      localStorage.setItem("user", JSON.stringify(response.data.user)) // Accessing user from API response
 
       // Redirect to dashboard
       navigate("/dashboard")

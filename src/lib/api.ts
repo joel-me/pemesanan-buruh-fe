@@ -13,125 +13,104 @@ if (!API_BASE_URL) {
   throw new Error("VITE_API_URL is not defined in environment variables.");
 }
 
+// Utility function to handle fetch errors
+const handleFetchError = async (response: Response) => {
+  const error = await response.json();
+  throw new Error(error.message || 'Request failed');
+};
+
+// Utility function to handle successful fetch response
+const handleFetchSuccess = async <T>(response: Response): Promise<APIResponse<T>> => {
+  if (!response.ok) {
+    await handleFetchError(response);
+  }
+  return response.json();
+};
+
 // Auth API functions
-export async function login(data: LoginDto): Promise<APIResponse<AuthResponse>> {
+export const login = async (data: LoginDto): Promise<APIResponse<AuthResponse>> => {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Login failed");
-  }
+  return handleFetchSuccess<AuthResponse>(response);
+};
 
-  return response.json();
-}
-
-export async function registerFarmer(data: RegisterFarmerDto): Promise<APIResponse<AuthResponse>> {
+export const registerFarmer = async (data: RegisterFarmerDto): Promise<APIResponse<AuthResponse>> => {
   const response = await fetch(`${API_BASE_URL}/auth/register/farmer`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Farmer registration failed");
-  }
+  return handleFetchSuccess<AuthResponse>(response);
+};
 
-  return response.json();
-}
-
-export async function registerLaborer(data: RegisterLaborerDto): Promise<APIResponse<AuthResponse>> {
+export const registerLaborer = async (data: RegisterLaborerDto): Promise<APIResponse<AuthResponse>> => {
   const response = await fetch(`${API_BASE_URL}/auth/register/laborer`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Laborer registration failed");
-  }
-
-  return response.json();
-}
+  return handleFetchSuccess<AuthResponse>(response);
+};
 
 // Orders API functions
-export async function createOrder(token: string, orderData: any): Promise<APIResponse<Order>> {
+export const createOrder = async (token: string, orderData: any): Promise<APIResponse<Order>> => {
   const response = await fetch(`${API_BASE_URL}/orders`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(orderData),
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to create order");
-  }
+  return handleFetchSuccess<Order>(response);
+};
 
-  return response.json();
-}
-
-export async function getMyOrders(token: string): Promise<APIResponse<Order[]>> {
+export const getMyOrders = async (token: string): Promise<APIResponse<Order[]>> => {
   const response = await fetch(`${API_BASE_URL}/orders/my-orders`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to fetch orders");
-  }
+  return handleFetchSuccess<Order[]>(response);
+};
 
-  return response.json();
-}
-
-export async function getMyPlacedOrders(token: string): Promise<APIResponse<Order[]>> {
+export const getMyPlacedOrders = async (token: string): Promise<APIResponse<Order[]>> => {
   const response = await fetch(`${API_BASE_URL}/orders/my-placed-orders`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to fetch placed orders");
-  }
+  return handleFetchSuccess<Order[]>(response);
+};
 
-  return response.json();
-}
-
-export async function updateOrderStatus(
+export const updateOrderStatus = async (
   token: string,
   orderId: string,
   status: string
-): Promise<APIResponse<Order>> {
+): Promise<APIResponse<Order>> => {
   const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
-    method: "PATCH",
+    method: 'PATCH',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ status }),
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to update order status");
-  }
-
-  return response.json();
-}
+  return handleFetchSuccess<Order>(response);
+};

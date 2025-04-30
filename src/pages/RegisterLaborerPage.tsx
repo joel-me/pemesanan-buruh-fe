@@ -1,7 +1,4 @@
-"use client"
-
 import type React from "react"
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "../components/ui/button"
@@ -14,27 +11,43 @@ import { Loader2, X } from "lucide-react"
 import { registerLaborer } from "../lib/api"
 import { Badge } from "../components/ui/badge"
 
+// Interface to define the DTO for the registration form
+interface RegisterLaborerDto {
+  username: string;
+  password: string;
+  confirmPassword: string;
+  email: string;
+  address: string;
+  phoneNumber: string;
+  age: number;  // Ensure this is a number
+  skills: string[];
+  experience: string;
+}
+
 export default function RegisterLaborerPage() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentSkill, setCurrentSkill] = useState("")
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RegisterLaborerDto>({
     username: "",
     password: "",
     confirmPassword: "",
     email: "",
     address: "",
     phoneNumber: "",
-    age: "",
-    skills: [] as string[],
+    age: 0,  // Set default to number 0
+    skills: [],
     experience: "",
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "age" ? Number(value) : value, // Convert 'age' to number
+    }))
   }
 
   const addSkill = () => {
@@ -73,20 +86,12 @@ export default function RegisterLaborerPage() {
     setError(null)
 
     try {
-      const response = await registerLaborer({
-        username: formData.username,
-        password: formData.password,
-        email: formData.email,
-        address: formData.address,
-        phoneNumber: formData.phoneNumber,
-        age: Number.parseInt(formData.age),
-        skills: formData.skills,
-        experience: formData.experience,
-      })
+      // Call the registerLaborer function with form data
+      const response = await registerLaborer(formData)
 
-      // Store token and user info
-      localStorage.setItem("token", response.token)
-      localStorage.setItem("user", JSON.stringify(response.user))
+      // Assuming the response has a structure where `data` contains token and user
+      localStorage.setItem("token", response.data.token)
+      localStorage.setItem("user", JSON.stringify(response.data.user))
 
       // Redirect to dashboard
       navigate("/dashboard")
@@ -223,9 +228,6 @@ export default function RegisterLaborerPage() {
                   </Badge>
                 ))}
               </div>
-              {formData.skills.length === 0 && (
-                <p className="text-sm text-muted-foreground mt-2">Tambahkan minimal satu keterampilan</p>
-              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="experience">Pengalaman Kerja</Label>

@@ -29,7 +29,7 @@ export default function LaboreDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || !token || user.role !== "worker") {
+    if (!user || !token || user.role !== "laborer") {
       navigate("/login");
       return;
     }
@@ -153,11 +153,23 @@ export default function LaboreDashboard() {
               </TabsList>
 
               <TabsContent value="active">
-                {isLoading ? <p>Memuat...</p> : error ? <p>{error}</p> : renderOrders("active")}
+                {isLoading ? (
+                  <p>Memuat...</p>
+                ) : error ? (
+                  <p>{error}</p>
+                ) : (
+                  renderOrders("active")
+                )}
               </TabsContent>
 
               <TabsContent value="completed">
-                {isLoading ? <p>Memuat...</p> : error ? <p>{error}</p> : renderOrders("completed")}
+                {isLoading ? (
+                  <p>Memuat...</p>
+                ) : error ? (
+                  <p>{error}</p>
+                ) : (
+                  renderOrders("completed")
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
