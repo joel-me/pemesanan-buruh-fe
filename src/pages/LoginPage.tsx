@@ -41,11 +41,9 @@ export default function LoginPage() {
 
       // Navigate to the appropriate dashboard based on role
       if (response.data.user.role === "laborer") {
-        navigate("/dashboard/laborer");
+        navigate("/dashboard/laborer"); // Halaman dashboard untuk laborer
       } else if (response.data.user.role === "farmer") {
-        navigate("/dashboard/farmer");
-      } else {
-        navigate("/dashboard"); // Default if no role matches
+        navigate("/dashboard/farmer"); // Halaman dashboard untuk farmer
       }
     } catch (err) {
       setError("Login failed, please try again.");
