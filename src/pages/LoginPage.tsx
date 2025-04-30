@@ -1,5 +1,3 @@
-// src/pages/LoginPage.tsx
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -8,7 +6,7 @@ import { Label } from "../components/ui/label";
 import { Card } from "../components/ui/card";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { login } from "../lib/api";  // Mengimpor fungsi login yang benar
+import { login } from "../lib/api"; // Mengimpor fungsi login yang benar
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -34,7 +32,7 @@ export default function LoginPage() {
 
     try {
       // Panggil API login dengan username dan password
-      const response = await login(formData);  // Menggunakan fungsi login yang benar
+      const response = await login(formData); // Menggunakan fungsi login yang benar
 
       // Simpan token dan user ke localStorage atau state manajemen
       localStorage.setItem("token", response.data.token);
@@ -46,9 +44,10 @@ export default function LoginPage() {
       } else if (response.data.user.role === "farmer") {
         navigate("/dashboard/farmer");
       } else {
-        navigate("/dashboard");
+        navigate("/dashboard"); // Jika tidak ada role yang sesuai, default ke dashboard
       }
     } catch (err) {
+      // Tangani error dengan baik
       setError("Login gagal, coba lagi.");
     } finally {
       setIsLoading(false);

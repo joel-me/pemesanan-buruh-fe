@@ -1,180 +1,114 @@
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../lib/auth-context";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
-import { getMyOrders, updateOrderStatus } from "../lib/api";
-import type { Order } from "../lib/types";
-import { Badge } from "../components/ui/badge";
-import { format } from "date-fns";
-import { id } from "date-fns/locale";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Card } from "../components/ui/card";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { Loader2 } from "lucide-react";
+import { login } from "../lib/api";  // Mengimpor fungsi login yang benar
+import { useAuth } from "../lib/auth-context"; // Mengimpor hook useAuth
 
-export default function LaboreDashboard() {
+export default function LoginPage() {
+  const { login: setLogin } = useAuth();  // Menggunakan login dari context
   const navigate = useNavigate();
-  const { user, token, logout } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  });
 
-  useEffect(() => {
-    if (!user || !token || user.role !== "laborer") {
-      navigate("/login");
-      return;
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-    const fetchOrders = async () => {
-      setIsLoading(true);
-      try {
-        const fetchedOrders = await getMyOrders(token);
-        setOrders(fetchedOrders.data);
-      } catch (err) {
-        setError("Gagal memuat pesanan");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Panggil API login dengan username dan password
+      const response = await login(formData); // Menggunakan fungsi login yang benar
+
+      // Menyimpan token ke dalam context
+      setLogin(response.data.token);
+
+      // Arahkan ke dashboard sesuai dengan role user
+      if (response.data.user.role === "laborer") {
+        navigate("/dashboard/laborer");
+      } else if (response.data.user.role === "farmer") {
+        navigate("/dashboard/farmer");
+      } else {
+        navigate("/dashboard"); // Default jika tidak ada role yang sesuai
       }
-    };
-
-    fetchOrders();
-  }, [user, token, navigate]);
-
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
-    if (!token) return;
-
-    try {
-      const updatedOrder = await updateOrderStatus(token, orderId, newStatus);
-      setOrders((prev) =>
-        prev.map((order) =>
-          order.id === updatedOrder.data.id ? updatedOrder.data : order
-        )
-      );
     } catch (err) {
-      console.error("Gagal memperbarui status pesanan:", err);
+      setError("Login gagal, coba lagi.");
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const badgeStyle = {
-      pending: { text: "Menunggu", class: "bg-yellow-100 text-yellow-800" },
-      accepted: { text: "Diterima", class: "bg-blue-100 text-blue-800" },
-      completed: { text: "Selesai", class: "bg-green-100 text-green-800" },
-      cancelled: { text: "Dibatalkan", class: "bg-red-100 text-red-800" },
-    }[status];
-
-    return (
-      <Badge variant="outline" className={badgeStyle?.class}>
-        {badgeStyle?.text || status}
-      </Badge>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "dd MMMM yyyy", { locale: id });
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  const renderOrders = (filterStatus: "active" | "completed") => {
-    const filtered = orders.filter((order) =>
-      filterStatus === "active"
-        ? order.status === "pending" || order.status === "accepted"
-        : order.status === "completed"
-    );
-
-    if (filtered.length === 0) {
-      return <p>Tidak ada pesanan.</p>;
-    }
-
-    return filtered.map((order) => (
-      <div
-        key={order.id}
-        className="mb-4 p-4 bg-white shadow rounded-md border"
-      >
-        <h3 className="text-lg font-semibold">{order.description}</h3>
-        <p className="mt-1">Status: {getStatusBadge(order.status)}</p>
-        <p className="text-sm text-gray-600">
-          Tanggal Pesanan: {formatDate(order.createdAt)}
-        </p>
-        {order.status === "accepted" && (
-          <Button
-            className="mt-2"
-            onClick={() => handleStatusUpdate(order.id, "completed")}
-          >
-            Tandai Selesai
-          </Button>
-        )}
-      </div>
-    ));
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-green-600 text-white p-4 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold">Dashboard Buruh (Labore)</h1>
-          <div className="flex items-center gap-4">
-            <span>Halo, {user?.username || "Guest"}</span>
-            <Button
-              variant="outline"
-              className="text-white border-white hover:bg-green-700"
-              onClick={logout}
-            >
-              Keluar
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-green-600 py-8">
+      <div className="container mx-auto px-4">
+        <Card className="max-w-2xl mx-auto p-6">
+          <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
 
-      <main className="container mx-auto py-8 px-4">
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Pesanan Anda</CardTitle>
-            <CardDescription>Kelola pesanan yang Anda terima</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="active" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="active">Pesanan Aktif</TabsTrigger>
-                <TabsTrigger value="completed">Pesanan Selesai</TabsTrigger>
-              </TabsList>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-              <TabsContent value="active">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <div className="pt-4">
+              <Button
+                type="submit"
+                className="w-full bg-green-600 hover:bg-green-700"
+                disabled={isLoading}
+              >
                 {isLoading ? (
-                  <p>Memuat...</p>
-                ) : error ? (
-                  <p>{error}</p>
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Memproses...
+                  </>
                 ) : (
-                  renderOrders("active")
+                  "Login"
                 )}
-              </TabsContent>
-
-              <TabsContent value="completed">
-                {isLoading ? (
-                  <p>Memuat...</p>
-                ) : error ? (
-                  <p>{error}</p>
-                ) : (
-                  renderOrders("completed")
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
+              </Button>
+            </div>
+          </form>
         </Card>
-      </main>
+      </div>
     </div>
   );
 }

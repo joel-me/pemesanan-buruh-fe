@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../lib/auth-context"
@@ -16,16 +15,16 @@ import { createOrder } from "../lib/api"
 
 // Define the types for formData
 interface FormData {
-  description: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  wage: string;
+  description: string
+  location: string
+  startDate: string
+  endDate: string
+  wage: string
 }
 
 export default function CreateOrderPage() {
   const navigate = useNavigate()
-  const { user, token } = useAuth()
+  const { isAuthenticated, getToken } = useAuth() // Updated to use isAuthenticated and getToken
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -45,8 +44,11 @@ export default function CreateOrderPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!token || user?.role !== "farmer") {
-      setError("Anda tidak memiliki izin untuk membuat pesanan")
+    const token = getToken()
+
+    // Validate if the user is authenticated and has a token
+    if (!token || !isAuthenticated) {
+      setError("Anda harus login untuk membuat pesanan.")
       return
     }
 
@@ -54,6 +56,7 @@ export default function CreateOrderPage() {
     setError(null)
 
     try {
+      // Call API to create order
       await createOrder(token, {
         description: formData.description,
         location: formData.location,
@@ -62,18 +65,18 @@ export default function CreateOrderPage() {
         wage: Number.parseFloat(formData.wage),
       })
 
-      // Redirect to dashboard
+      // Redirect to dashboard if the order is created successfully
       navigate("/dashboard")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal membuat pesanan")
+      setError(err instanceof Error ? err.message : "Gagal membuat pesanan.")
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Redirect if not a farmer
-  if (user?.role !== "farmer") {
-    navigate("/dashboard")
+  // Redirect if the user is not authenticated
+  if (!isAuthenticated) {
+    navigate("/login") // Redirect to login page if the user is not authenticated
     return null
   }
 

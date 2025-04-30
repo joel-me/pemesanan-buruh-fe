@@ -67,13 +67,13 @@ const updateOrderStatus = async (
 
 export default function FarmerDashboard() {
   const navigate = useNavigate();
-  const { user, token, logout } = useAuth();
+  const { isAuthenticated, getToken, logout } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || !token || user.role !== "farmer") {
+    if (!isAuthenticated) {
       navigate("/login");
       return;
     }
@@ -81,6 +81,11 @@ export default function FarmerDashboard() {
     const loadOrders = async () => {
       setIsLoading(true);
       try {
+        const token = getToken();
+        if (!token) {
+          setError("Token tidak ditemukan.");
+          return;
+        }
         const fetchedOrders = await fetchOrders(token);
         setOrders(fetchedOrders);
       } catch (err) {
@@ -92,12 +97,13 @@ export default function FarmerDashboard() {
     };
 
     loadOrders();
-  }, [user, token, navigate]);
+  }, [isAuthenticated, navigate, getToken]);
 
   const handleStatusUpdate = async (
     orderId: string,
     newStatus: string
   ) => {
+    const token = getToken();
     if (!token) return;
 
     try {
@@ -157,7 +163,7 @@ export default function FarmerDashboard() {
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-xl font-bold">Dashboard Petani</h1>
           <div className="flex items-center gap-4">
-            <span>Halo, {user?.username}</span>
+            <span>Halo, {isAuthenticated ? "Petani" : "Tamu"}</span>
             <Button
               variant="outline"
               className="text-white border-white hover:bg-green-700"

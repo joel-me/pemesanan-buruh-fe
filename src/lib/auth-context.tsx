@@ -1,88 +1,54 @@
-// src/lib/auth-context.tsx
+import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
-import axios from "axios";
-
-// Definisikan tipe untuk User
-interface User {
-  id: string;
-  username: string;
-  role: "farmer" | "laborer";
-}
-
-// Tipe untuk response login
-interface LoginResponse {
-  token: string;
-  user: User;
-}
-
+// Definisikan tipe untuk AuthContext
 type AuthContextType = {
-  token: string | null;
-  user: User | null;
-  isLoading: boolean;
-  error: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  isAuthenticated: boolean;
+  login: (token: string) => void;
   logout: () => void;
+  getToken: () => string | null;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Membuat context untuk Auth
+const AuthContext = createContext<AuthContextType | null>(null);
 
+// Provider untuk AuthContext
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token")
-  );
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  const login = async (username: string, password: string) => {
-    setIsLoading(true);
-    setError(null);
+  // Mengecek apakah token ada di localStorage saat pertama kali komponen dimuat
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token); // Menetapkan isAuthenticated sesuai keberadaan token
+  }, []);
 
-    try {
-      const response = await axios.post<LoginResponse>(
-        "http://localhost:3000/auth/login",
-        {
-          username,
-          password,
-        }
-      );
-
-      const { token, user } = response.data;
-
-      // Simpan token dan user di localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      setToken(token);
-      setUser(user);
-    } catch (err: any) {
-      // Menangani error
-      setError(err?.response?.data?.message || "Login gagal");
-    } finally {
-      setIsLoading(false);
-    }
+  // Fungsi untuk login
+  const login = (token: string) => {
+    localStorage.setItem("token", token); // Menyimpan token di localStorage
+    setIsAuthenticated(true); // Menandakan bahwa pengguna sudah login
   };
 
+  // Fungsi untuk logout
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setToken(null);
-    setUser(null);
+    localStorage.removeItem("token"); // Menghapus token dari localStorage
+    setIsAuthenticated(false); // Menandakan bahwa pengguna sudah logout
+  };
+
+  // Fungsi untuk mendapatkan token
+  const getToken = (): string | null => {
+    return localStorage.getItem("token"); // Mengambil token dari localStorage
   };
 
   return (
-    <AuthContext.Provider
-      value={{ token, user, isLoading, error, login, logout }}
-    >
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, getToken }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = (): AuthContextType => {
+// Hook untuk mengakses context di dalam komponen
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
