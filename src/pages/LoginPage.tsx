@@ -14,8 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     username: "",
-    password: "",
-    email: "",  // Menambahkan email ke formData
+    password: "", // Tidak ada email
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,18 +72,6 @@ export default function LoginPage() {
                 id="username"
                 name="username"
                 value={formData.username}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>  {/* Menambahkan input untuk email */}
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
                 onChange={handleChange}
                 required
                 disabled={isLoading}

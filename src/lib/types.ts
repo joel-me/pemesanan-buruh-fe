@@ -3,37 +3,37 @@
 export type APIResponse<T> = {
     data: T;
     message: string;
-  };
-  
-  export type AuthResponse = {
+};
+
+export type AuthResponse = {
     token: string;
     user: {
-      id: string;
-      username: string;
-      email: string;
-      role: "farmer" | "laborer";
-      address: string;
-      phoneNumber: string;
-      landArea: number;
-      cropType: string;
+        id: string;
+        username: string;
+        email: string;
+        role: "farmer" | "laborer";
+        address: string;
+        phoneNumber: string;
+        landArea: number;
+        cropType: string;
     };
-  };
-  
-  export type Order = {
+};
+
+export type Order = {
     id: string;
     description: string;
     createdAt: string;
     status: "pending" | "accepted" | "completed" | "cancelled";
     farmerId: string;
     laborerId: string;
-  };
-  
-  export type LoginDto = {
-    email: string;
+};
+
+export type LoginDto = {
+    username: string;  // Menggunakan username, bukan email
     password: string;
-  };
-  
-  export type RegisterFarmerDto = {
+};
+
+export type RegisterFarmerDto = {
     username: string;
     email: string;
     password: string;
@@ -41,9 +41,9 @@ export type APIResponse<T> = {
     phoneNumber: string;   // Added phoneNumber
     landArea: number;      // Added landArea
     cropType: string;      // Added cropType
-  };
-  
-  export type RegisterLaborerDto = {
+};
+
+export type RegisterLaborerDto = {
     username: string;
     password: string;
     confirmPassword: string;
@@ -53,5 +53,4 @@ export type APIResponse<T> = {
     age: number;
     skills: string[];  // This needs to match
     experience: string;
-  };
-  
+};
