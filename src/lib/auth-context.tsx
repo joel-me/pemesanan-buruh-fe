@@ -1,51 +1,66 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 
-// Definisikan tipe untuk AuthContext
+// Define the AuthContext type
 type AuthContextType = {
   isAuthenticated: boolean;
-  login: (token: string) => void;
+  user: { id: string; username: string; role: 'farmer' | 'laborer' } | null; // Include user data
+  token: string | null; // Store the JWT token
+  login: (user: { id: string; username: string; role: 'farmer' | 'laborer' }, token: string) => void;
   logout: () => void;
   getToken: () => string | null;
 };
 
-// Membuat context untuk Auth
+// Create AuthContext
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Provider untuk AuthContext
+// AuthProvider to manage authentication state
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<AuthContextType['user']>(null);
+  const [token, setToken] = useState<string | null>(null);
 
-  // Mengecek apakah token ada di localStorage saat pertama kali komponen dimuat
+  // Check if token exists in localStorage on component mount
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsAuthenticated(!!token); // Menetapkan isAuthenticated sesuai keberadaan token
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
+    }
   }, []);
 
-  // Fungsi untuk login
-  const login = (token: string) => {
-    localStorage.setItem("token", token); // Menyimpan token di localStorage
-    setIsAuthenticated(true); // Menandakan bahwa pengguna sudah login
+  // Login function to set token and user data
+  const login = (user: { id: string; username: string; role: 'farmer' | 'laborer' }, token: string) => {
+    localStorage.setItem("token", token); // Save token to localStorage
+    localStorage.setItem("user", JSON.stringify(user)); // Save user data to localStorage
+    setToken(token);
+    setUser(user);
+    setIsAuthenticated(true); // Mark as authenticated
   };
 
-  // Fungsi untuk logout
+  // Logout function to clear token and user data
   const logout = () => {
-    localStorage.removeItem("token"); // Menghapus token dari localStorage
-    setIsAuthenticated(false); // Menandakan bahwa pengguna sudah logout
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setToken(null);
+    setUser(null);
+    setIsAuthenticated(false); // Mark as not authenticated
   };
 
-  // Fungsi untuk mendapatkan token
+  // Get token from localStorage
   const getToken = (): string | null => {
-    return localStorage.getItem("token"); // Mengambil token dari localStorage
+    return localStorage.getItem("token");
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, getToken }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout, getToken }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook untuk mengakses context di dalam komponen
+// Custom hook to access the AuthContext in components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

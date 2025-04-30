@@ -116,3 +116,14 @@ export const updateOrderStatus = async (
 
   return handleFetchSuccess<Order>(response);
 };
+
+// New function to get laborer data
+export const getLaborerData = async (token: string): Promise<APIResponse<any>> => {
+  const response = await fetch(`${API_PREFIX}/laborer/data`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleFetchSuccess<any>(response);
+};

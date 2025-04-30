@@ -6,9 +6,11 @@ import { Label } from "../components/ui/label";
 import { Card } from "../components/ui/card";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { login } from "../lib/api"; // Mengimpor fungsi login yang benar
+import { login } from "../lib/api";  // Import the correct login function
+import { useAuth } from "../lib/auth-context"; // Import useAuth hook
 
 export default function LoginPage() {
+  const { login: setLogin } = useAuth();  // Using login from context
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,24 +33,22 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // Panggil API login dengan username dan password
-      const response = await login(formData); // Menggunakan fungsi login yang benar
+      // Call the login API with username and password
+      const response = await login(formData);  // Assuming login returns { data: { token, user } }
 
-      // Simpan token dan user ke localStorage atau state manajemen
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      // Store both user and token in context
+      setLogin(response.data.user, response.data.token);
 
-      // Arahkan ke dashboard sesuai dengan role user
+      // Navigate to the appropriate dashboard based on role
       if (response.data.user.role === "laborer") {
         navigate("/dashboard/laborer");
       } else if (response.data.user.role === "farmer") {
         navigate("/dashboard/farmer");
       } else {
-        navigate("/dashboard"); // Jika tidak ada role yang sesuai, default ke dashboard
+        navigate("/dashboard"); // Default if no role matches
       }
     } catch (err) {
-      // Tangani error dengan baik
-      setError("Login gagal, coba lagi.");
+      setError("Login failed, please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +99,7 @@ export default function LoginPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memproses...
+                    Processing...
                   </>
                 ) : (
                   "Login"
