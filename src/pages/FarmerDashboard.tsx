@@ -4,16 +4,48 @@ import { useAuth } from "../lib/auth-context";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { getMyPlacedOrders, updateOrderStatus, type Order } from "../lib/api";
 import { Loader2 } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
+// API call functions
+const fetchOrders = async (token: string) => {
+  const response = await fetch("https://web-pemesanan-buruh-be.vercel.app/api/orders", {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to fetch orders");
+  }
+
+  return await response.json();
+};
+
+const updateOrderStatus = async (token: string, orderId: string, newStatus: string) => {
+  const response = await fetch(`https://web-pemesanan-buruh-be.vercel.app/api/orders/${orderId}`, {
+    method: "PATCH",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status: newStatus }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update order status");
+  }
+
+  return await response.json();
+};
+
 export default function FarmerDashboard() {
   const navigate = useNavigate();
   const { user, token, logout } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,10 +55,10 @@ export default function FarmerDashboard() {
       return;
     }
 
-    const fetchOrders = async () => {
+    const loadOrders = async () => {
       setIsLoading(true);
       try {
-        const fetchedOrders = await getMyPlacedOrders(token); // Memanggil API untuk mengambil pesanan petani
+        const fetchedOrders = await fetchOrders(token);
         setOrders(fetchedOrders);
       } catch (err) {
         setError("Gagal memuat pesanan");
@@ -36,7 +68,7 @@ export default function FarmerDashboard() {
       }
     };
 
-    fetchOrders();
+    loadOrders();
   }, [user, token, navigate]);
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
@@ -123,7 +155,6 @@ export default function FarmerDashboard() {
                           <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
                           <div>Tanggal Selesai: {formatDate(order.endDate)}</div>
 
-                          {/* Add buttons to update order status */}
                           {order.status === "pending" && (
                             <Button
                               onClick={() => handleStatusUpdate(order.id, "accepted")}
