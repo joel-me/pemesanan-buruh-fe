@@ -10,7 +10,7 @@ import { login } from "../lib/api";  // Import the correct login function
 import { useAuth } from "../lib/auth-context"; // Import useAuth hook
 
 export default function LoginPage() {
-  const { login: setLogin } = useAuth();  // Using login from context
+  const { login: setLogin } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,17 +33,15 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // Call the login API with username and password
-      const response = await login(formData);  // Assuming login returns { data: { token, user } }
+      const response = await login(formData); 
 
       // Store both user and token in context
       setLogin(response.data.user, response.data.token);
 
-      // Navigate to the appropriate dashboard based on role
       if (response.data.user.role === "laborer") {
-        navigate("/dashboard/laborer"); // Halaman dashboard untuk laborer
+        navigate("/dashboard/laborer");
       } else if (response.data.user.role === "farmer") {
-        navigate("/dashboard/farmer"); // Halaman dashboard untuk farmer
+        navigate("/dashboard/farmer");
       }
     } catch (err) {
       setError("Login failed, please try again.");
@@ -95,10 +93,7 @@ export default function LoginPage() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   "Login"
                 )}

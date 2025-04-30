@@ -1,84 +1,67 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 
-// Tipe user yang disimpan
-type User = {
-  id: string;
-  username: string;
-  role: "farmer" | "laborer";
-};
-
-// Tipe untuk konteks autentikasi
+// Define the AuthContext type
 type AuthContextType = {
   isAuthenticated: boolean;
-  user: User | null;
+  user: { id: string; username: string; role: 'farmer' | 'laborer' } | null;
   token: string | null;
-  login: (user: User, token: string) => void;
+  login: (user: { id: string; username: string; role: 'farmer' | 'laborer' }, token: string) => void;
   logout: () => void;
   getToken: () => string | null;
 };
 
-// Inisialisasi context
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create AuthContext
+const AuthContext = createContext<AuthContextType | null>(null);
 
-// Provider untuk membungkus aplikasi dan menyediakan auth context
+// AuthProvider to manage authentication state
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<AuthContextType['user']>(null);
   const [token, setToken] = useState<string | null>(null);
-  const isAuthenticated = !!token && !!user;
 
-  // Inisialisasi state dari localStorage
+  // Check if token exists in localStorage on component mount
   useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem("token");
-      const storedUser = localStorage.getItem("user");
-
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      }
-    } catch (error) {
-      console.error("Failed to load auth data:", error);
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
     }
   }, []);
 
-  // Login: simpan data ke state dan localStorage
-  const login = (user: User, token: string) => {
-    setUser(user);
+  // Login function to set token and user data
+  const login = (user: { id: string; username: string; role: 'farmer' | 'laborer' }, token: string) => {
+    localStorage.setItem("token", token); 
+    localStorage.setItem("user", JSON.stringify(user)); 
     setToken(token);
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
+    setUser(user);
+    setIsAuthenticated(true); // Mark as authenticated
   };
 
-  // Logout: hapus data dari state dan localStorage
+  // Logout function to clear token and user data
   const logout = () => {
-    setUser(null);
-    setToken(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    setToken(null);
+    setUser(null);
+    setIsAuthenticated(false); // Mark as not authenticated
   };
 
-  // Ambil token untuk request ke server
-  const getToken = () => {
-    return token;
+  // Get token from localStorage
+  const getToken = (): string | null => {
+    return localStorage.getItem("token");
   };
 
   return (
-    <AuthContext.Provider
-      value={{ isAuthenticated, user, token, login, logout, getToken }}
-    >
+    <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout, getToken }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook untuk menggunakan AuthContext
-export const useAuth = (): AuthContextType => {
+// Custom hook to access the AuthContext in components
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
