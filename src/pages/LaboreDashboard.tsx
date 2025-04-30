@@ -1,174 +1,144 @@
-// API base URL
-const API_BASE_URL = "https://web-pemesanan-buruh-be.vercel.app/api"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../lib/auth-context"
+import { Button } from "../components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { getMyOrders, updateOrderStatus, type Order } from "../lib/api"
+import { Badge } from "../components/ui/badge"
+import { format } from "date-fns"
+import { id } from "date-fns/locale"
 
-// Types based on API schema
-export interface LoginDto {
-  username: string
-  password: string
-}
+export default function LaboreDashboard() {
+  const navigate = useNavigate()
+  const { user, token, logout } = useAuth()
+  const [orders, setOrders] = useState<Order[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-export interface RegisterFarmerDto {
-  username: string
-  password: string
-  email: string
-  address: string
-  phoneNumber: string
-  landArea: number
-  cropType: string
-}
+  useEffect(() => {
+    if (!user || !token || user.role !== "worker") {
+      navigate("/login")
+      return
+    }
 
-export interface RegisterLaborerDto {
-  username: string
-  password: string
-  email: string
-  address: string
-  phoneNumber: string
-  age: number
-  skills: string[]
-  experience: string
-}
+    const fetchOrders = async () => {
+      setIsLoading(true)
+      try {
+        const fetchedOrders = await getMyOrders(token)
+        setOrders(fetchedOrders)
+      } catch (err) {
+        setError("Gagal memuat pesanan")
+        console.error(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-export interface AuthResponse {
-  token: string
-  user: {
-    id: string
-    username: string
-    role: "farmer" | "laborer"
-    name: string
-  }
-}
+    fetchOrders()
+  }, [user, token, navigate])
 
-export interface Order {
-  id: string
-  farmerId: string
-  farmerName: string
-  laborerId?: string
-  laborerName?: string
-  description: string
-  location: string
-  startDate: string
-  endDate: string
-  wage: number
-  status: "pending" | "accepted" | "completed" | "cancelled"
-  createdAt: string
-  updatedAt: string
-}
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    if (!token) return
 
-// Auth API functions
-export async function login(data: LoginDto): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || "Login failed")
+    try {
+      const updatedOrder = await updateOrderStatus(token, orderId, newStatus)
+      setOrders(orders.map((order) => (order.id === updatedOrder.id ? updatedOrder : order)))
+    } catch (err) {
+      console.error("Failed to update order status:", err)
+    }
   }
 
-  return response.json()
-}
-
-export async function registerFarmer(data: RegisterFarmerDto): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/register/farmer`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || "Farmer registration failed")
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Menunggu</Badge>
+      case "accepted":
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800">Diterima</Badge>
+      case "completed":
+        return <Badge variant="outline" className="bg-green-100 text-green-800">Selesai</Badge>
+      case "cancelled":
+        return <Badge variant="outline" className="bg-red-100 text-red-800">Dibatalkan</Badge>
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
   }
 
-  return response.json()
-}
-
-export async function registerLaborer(data: RegisterLaborerDto): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/register/laborer`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || "Laborer registration failed")
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "dd MMMM yyyy", { locale: id })
+    } catch (e) {
+      return dateString
+    }
   }
 
-  return response.json()
-}
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <header className="bg-green-600 text-white p-4 shadow-md">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-xl font-bold">Dashboard Buruh (Labore)</h1>
+          <div className="flex items-center gap-4">
+            <span>Halo, {user ? user.username : "Guest"}</span>
+            <Button variant="outline" className="text-white border-white hover:bg-green-700" onClick={logout}>
+              Keluar
+            </Button>
+          </div>
+        </div>
+      </header>
 
-// Orders API functions
-export async function createOrder(token: string, orderData: any): Promise<Order> {
-  const response = await fetch(`${API_BASE_URL}/orders`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(orderData),
-  })
+      <main className="container mx-auto py-8 px-4">
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Pesanan Anda</CardTitle>
+            <CardDescription>Kelola pesanan yang Anda terima</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="active" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="active">Pesanan Aktif</TabsTrigger>
+                <TabsTrigger value="completed">Pesanan Selesai</TabsTrigger>
+              </TabsList>
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || "Failed to create order")
-  }
+              <TabsContent value="active">
+                {isLoading ? (
+                  <div>Loading...</div>
+                ) : error ? (
+                  <div>{error}</div>
+                ) : (
+                  orders
+                    .filter(order => order.status === "pending" || order.status === "accepted") // filter active orders
+                    .map(order => (
+                      <div key={order.id} className="mb-4 p-4 bg-white shadow rounded-md">
+                        <h3>{order.description}</h3> {/* Replaced 'title' with 'description' */}
+                        <p>Status: {getStatusBadge(order.status)}</p>
+                        <p>Order Date: {formatDate(order.createdAt)}</p> {/* Using 'createdAt' */}
+                        <Button onClick={() => handleStatusUpdate(order.id, "completed")}>Mark as Completed</Button>
+                      </div>
+                    ))
+                )}
+              </TabsContent>
 
-  return response.json()
-}
-
-export async function getMyOrders(token: string): Promise<Order[]> {
-  const response = await fetch(`${API_BASE_URL}/orders/my-orders`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || "Failed to fetch orders")
-  }
-
-  return response.json()
-}
-
-export async function getMyPlacedOrders(token: string): Promise<Order[]> {
-  const response = await fetch(`${API_BASE_URL}/orders/my-placed-orders`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || "Failed to fetch placed orders")
-  }
-
-  return response.json()
-}
-
-export async function updateOrderStatus(token: string, orderId: string, status: string): Promise<Order> {
-  const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ status }),
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || "Failed to update order status")
-  }
-
-  return response.json()
+              <TabsContent value="completed">
+                {isLoading ? (
+                  <div>Loading...</div>
+                ) : error ? (
+                  <div>{error}</div>
+                ) : (
+                  orders
+                    .filter(order => order.status === "completed") // filter completed orders
+                    .map(order => (
+                      <div key={order.id} className="mb-4 p-4 bg-white shadow rounded-md">
+                        <h3>{order.description}</h3> {/* Replaced 'title' with 'description' */}
+                        <p>Status: {getStatusBadge(order.status)}</p>
+                        <p>Order Date: {formatDate(order.createdAt)}</p> {/* Using 'createdAt' */}
+                      </div>
+                    ))
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  )
 }
