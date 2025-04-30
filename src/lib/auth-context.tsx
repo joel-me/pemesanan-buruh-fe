@@ -32,8 +32,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Login function to set token and user data
   const login = (user: { id: string; username: string; role: 'farmer' | 'laborer' }, token: string) => {
-    localStorage.setItem("token", token); 
-    localStorage.setItem("user", JSON.stringify(user)); 
+    localStorage.setItem("token", token); // Save token to localStorage
+    localStorage.setItem("user", JSON.stringify(user)); // Save user data to localStorage
     setToken(token);
     setUser(user);
     setIsAuthenticated(true); // Mark as authenticated

@@ -6,12 +6,12 @@ import { Label } from "../components/ui/label";
 import { Card } from "../components/ui/card";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { login } from "../lib/api";  // Import API login yang sesuai
-import { useAuth } from "../lib/auth-context"; // Hook untuk akses ke context
+import { login as loginApi } from "../lib/api"; // Import the correct login function
+import { useAuth } from "../lib/auth-context"; // Import useAuth hook
 
 export default function LoginPage() {
-  const { login: setLogin } = useAuth();  // Mendapatkan fungsi login dari context
-  const navigate = useNavigate();  // Menggunakan navigate untuk berpindah halaman
+  const { login: setLogin } = useAuth(); // Using login from context
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -33,19 +33,19 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // Panggil API login
-      const response = await login(formData);  // Login API yang mengembalikan user dan token
+      // Call the login API with username and password
+      const response = await loginApi(formData); // Assuming login returns { data: { token, user } }
 
-      // Simpan user dan token di context
+      // Store both user and token in context
       setLogin(response.data.user, response.data.token);
 
-      // Arahkan pengguna ke halaman yang sesuai berdasarkan role mereka
+      // Navigate to the appropriate dashboard based on role
       if (response.data.user.role === "laborer") {
         navigate("/dashboard/laborer");
       } else if (response.data.user.role === "farmer") {
         navigate("/dashboard/farmer");
       } else {
-        navigate("/dashboard"); // Arahkan ke halaman default
+        navigate("/dashboard"); // Default if no role matches
       }
     } catch (err) {
       setError("Login failed, please try again.");
