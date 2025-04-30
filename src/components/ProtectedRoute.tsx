@@ -1,27 +1,31 @@
+// ProtectedRoute.tsx
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../lib/auth-context";
+import { useAuth } from "../lib/auth-context"; // Import hook useAuth
 
 interface ProtectedRouteProps {
-  children: ReactNode; // Komponen anak yang akan dibungkus oleh ProtectedRoute
+  children: ReactNode; // Komponen yang dibungkus oleh ProtectedRoute
   requiredRole?: "farmer" | "laborer"; // Role yang diperlukan untuk mengakses halaman
 }
 
 export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { user, token } = useAuth(); // Mengambil data user dan token dari context
+  const { user, token } = useAuth(); // Ambil user dan token dari context
 
-  // Cek apakah token dan user ada
+  // Jika token atau user tidak ada, arahkan ke halaman login
   if (!token || !user) {
-    // Jika tidak ada token atau user, arahkan ke halaman login
     return <Navigate to="/login" replace />;
   }
 
-  // Jika role diperlukan, cek apakah role pengguna sesuai
+  // Jika role tidak sesuai dengan yang dibutuhkan, arahkan ke dashboard sesuai role
   if (requiredRole && user.role !== requiredRole) {
-    // Jika role pengguna tidak sesuai, arahkan ke halaman dashboard default
-    return <Navigate to="/dashboard" replace />;
+    if (user.role === "farmer") {
+      return <Navigate to="/dashboard/farmer" replace />;
+    }
+    if (user.role === "laborer") {
+      return <Navigate to="/dashboard/laborer" replace />;
+    }
   }
 
-  // Jika pengguna terautentikasi dan memiliki role yang sesuai, tampilkan children (halaman yang dibungkus)
+  // Jika role cocok, tampilkan halaman yang dibungkus
   return <>{children}</>;
 }

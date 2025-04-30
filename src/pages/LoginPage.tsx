@@ -6,12 +6,12 @@ import { Label } from "../components/ui/label";
 import { Card } from "../components/ui/card";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { login } from "../lib/api";  // Pastikan login ini berfungsi dengan benar
-import { useAuth } from "../lib/auth-context"; // Mengambil hook useAuth
+import { login } from "../lib/api";  // Import API login yang sesuai
+import { useAuth } from "../lib/auth-context"; // Hook untuk akses ke context
 
 export default function LoginPage() {
-  const { login: setLogin } = useAuth();  // Menggunakan login dari context
-  const navigate = useNavigate();  // Untuk navigasi setelah login
+  const { login: setLogin } = useAuth();  // Mendapatkan fungsi login dari context
+  const navigate = useNavigate();  // Menggunakan navigate untuk berpindah halaman
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -33,19 +33,19 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // Panggil API login dengan username dan password
-      const response = await login(formData);  // Asumsi login mengembalikan { data: { token, user } }
+      // Panggil API login
+      const response = await login(formData);  // Login API yang mengembalikan user dan token
 
-      // Simpan user dan token dalam context
+      // Simpan user dan token di context
       setLogin(response.data.user, response.data.token);
 
-      // Navigasi ke halaman dashboard sesuai role
+      // Arahkan pengguna ke halaman yang sesuai berdasarkan role mereka
       if (response.data.user.role === "laborer") {
         navigate("/dashboard/laborer");
       } else if (response.data.user.role === "farmer") {
         navigate("/dashboard/farmer");
       } else {
-        navigate("/dashboard"); // Halaman default jika tidak ada role yang cocok
+        navigate("/dashboard"); // Arahkan ke halaman default
       }
     } catch (err) {
       setError("Login failed, please try again.");
