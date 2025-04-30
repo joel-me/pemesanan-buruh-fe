@@ -1,67 +1,84 @@
-import { createContext, ReactNode, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
-// Define the AuthContext type
+// Tipe user yang disimpan
+type User = {
+  id: string;
+  username: string;
+  role: "farmer" | "laborer";
+};
+
+// Tipe untuk konteks autentikasi
 type AuthContextType = {
   isAuthenticated: boolean;
-  user: { id: string; username: string; role: 'farmer' | 'laborer' } | null; // Include user data
-  token: string | null; // Store the JWT token
-  login: (user: { id: string; username: string; role: 'farmer' | 'laborer' }, token: string) => void;
+  user: User | null;
+  token: string | null;
+  login: (user: User, token: string) => void;
   logout: () => void;
   getToken: () => string | null;
 };
 
-// Create AuthContext
-const AuthContext = createContext<AuthContextType | null>(null);
+// Inisialisasi context
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// AuthProvider to manage authentication state
+// Provider untuk membungkus aplikasi dan menyediakan auth context
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<AuthContextType['user']>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const isAuthenticated = !!token && !!user;
 
-  // Check if token exists in localStorage on component mount
+  // Inisialisasi state dari localStorage
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
+    try {
+      const storedToken = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+
+      if (storedToken && storedUser) {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Failed to load auth data:", error);
     }
   }, []);
 
-  // Login function to set token and user data
-  const login = (user: { id: string; username: string; role: 'farmer' | 'laborer' }, token: string) => {
-    localStorage.setItem("token", token); // Save token to localStorage
-    localStorage.setItem("user", JSON.stringify(user)); // Save user data to localStorage
-    setToken(token);
+  // Login: simpan data ke state dan localStorage
+  const login = (user: User, token: string) => {
     setUser(user);
-    setIsAuthenticated(true); // Mark as authenticated
+    setToken(token);
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
   };
 
-  // Logout function to clear token and user data
+  // Logout: hapus data dari state dan localStorage
   const logout = () => {
+    setUser(null);
+    setToken(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    setToken(null);
-    setUser(null);
-    setIsAuthenticated(false); // Mark as not authenticated
   };
 
-  // Get token from localStorage
-  const getToken = (): string | null => {
-    return localStorage.getItem("token");
+  // Ambil token untuk request ke server
+  const getToken = () => {
+    return token;
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout, getToken }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, user, token, login, logout, getToken }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook to access the AuthContext in components
-export const useAuth = () => {
+// Hook untuk menggunakan AuthContext
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
