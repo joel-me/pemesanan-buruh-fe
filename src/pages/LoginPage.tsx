@@ -6,12 +6,12 @@ import { Label } from "../components/ui/label";
 import { Card } from "../components/ui/card";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { login } from "../lib/api";  // Import the correct login function
-import { useAuth } from "../lib/auth-context"; // Import useAuth hook
+import { login } from "../lib/api";  // Pastikan login ini berfungsi dengan benar
+import { useAuth } from "../lib/auth-context"; // Mengambil hook useAuth
 
 export default function LoginPage() {
-  const { login: setLogin } = useAuth();
-  const navigate = useNavigate();
+  const { login: setLogin } = useAuth();  // Menggunakan login dari context
+  const navigate = useNavigate();  // Untuk navigasi setelah login
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -33,15 +33,19 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const response = await login(formData); 
+      // Panggil API login dengan username dan password
+      const response = await login(formData);  // Asumsi login mengembalikan { data: { token, user } }
 
-      // Store both user and token in context
+      // Simpan user dan token dalam context
       setLogin(response.data.user, response.data.token);
 
+      // Navigasi ke halaman dashboard sesuai role
       if (response.data.user.role === "laborer") {
         navigate("/dashboard/laborer");
       } else if (response.data.user.role === "farmer") {
         navigate("/dashboard/farmer");
+      } else {
+        navigate("/dashboard"); // Halaman default jika tidak ada role yang cocok
       }
     } catch (err) {
       setError("Login failed, please try again.");
@@ -93,7 +97,10 @@ export default function LoginPage() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
                 ) : (
                   "Login"
                 )}

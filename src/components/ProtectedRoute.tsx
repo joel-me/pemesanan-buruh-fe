@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../lib/auth-context"; // Hook untuk mengambil context autentikasi
+import { useAuth } from "../lib/auth-context";
 
 interface ProtectedRouteProps {
   children: ReactNode; // Komponen anak yang akan dibungkus oleh ProtectedRoute
