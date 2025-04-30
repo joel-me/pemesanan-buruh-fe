@@ -1,68 +1,70 @@
-"use client"
+import React, { createContext, useContext, useState, ReactNode } from "react"
+import axios from "axios"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { login as apiLogin, type AuthResponse } from "./api"
+// Definisikan tipe untuk User
+interface User {
+  id: string
+  username: string
+  role: "farmer" | "worker"
+}
 
-interface AuthContextType {
-  user: AuthResponse["user"] | null
+interface LoginResponse {
+  token: string
+  user: User
+}
+
+type AuthContextType = {
   token: string | null
-  login: (username: string, password: string) => Promise<void>
-  logout: () => void
+  user: User | null
   isLoading: boolean
   error: string | null
+  login: (username: string, password: string) => Promise<void>
+  logout: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthResponse["user"] | null>(null)
-  const [token, setToken] = useState<string | null>(null)
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [token, setToken] = useState<string | null>(localStorage.getItem("token"))
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    // Check if we have a token in localStorage
-    const storedToken = localStorage.getItem("token")
-    const storedUser = localStorage.getItem("user")
-
-    if (storedToken && storedUser) {
-      setToken(storedToken)
-      setUser(JSON.parse(storedUser))
-    }
-  }, [])
 
   const login = async (username: string, password: string) => {
     setIsLoading(true)
     setError(null)
 
     try {
-      const response = await apiLogin({ username, password })
-      setUser(response.user)
-      setToken(response.token)
+      const response = await axios.post<LoginResponse>("http://localhost:3000/auth/login", {
+        username,
+        password,
+      })
 
-      // Store in localStorage
-      localStorage.setItem("token", response.token)
-      localStorage.setItem("user", JSON.stringify(response.user))
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed")
+      const { token, user } = response.data
+      localStorage.setItem("token", token)
+      setToken(token)
+      setUser(user)
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Login gagal")
     } finally {
       setIsLoading(false)
     }
   }
 
   const logout = () => {
-    setUser(null)
-    setToken(null)
     localStorage.removeItem("token")
-    localStorage.removeItem("user")
+    setToken(null)
+    setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading, error }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ token, user, isLoading, error, login, logout }}>
+      {children}
+    </AuthContext.Provider>
   )
 }
 
-export function useAuth() {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider")

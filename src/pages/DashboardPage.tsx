@@ -107,7 +107,7 @@ export default function DashboardPage() {
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-xl font-bold">Pemesanan Jasa Buruh</h1>
           <div className="flex items-center gap-4">
-            <span>Halo, {user.name}</span>
+            <span>Halo, {user.username}</span> {/* Update to `user.username` or `user.fullName` */}
             <Button variant="outline" className="text-white border-white hover:bg-green-700" onClick={logout}>
               Keluar
             </Button>
@@ -177,7 +177,7 @@ export default function DashboardPage() {
                             </div>
                           </CardContent>
                           <CardFooter>
-                            {user.role === "laborer" && order.status === "pending" && (
+                            {user.role === "worker" && order.status === "pending" && (
                               <Button
                                 className="bg-green-600 hover:bg-green-700"
                                 onClick={() => handleStatusUpdate(order.id, "accepted")}
@@ -185,7 +185,7 @@ export default function DashboardPage() {
                                 Terima Pesanan
                               </Button>
                             )}
-                            {user.role === "laborer" && order.status === "accepted" && (
+                            {user.role === "worker" && order.status === "accepted" && (
                               <Button
                                 className="bg-green-600 hover:bg-green-700"
                                 onClick={() => handleStatusUpdate(order.id, "completed")}
