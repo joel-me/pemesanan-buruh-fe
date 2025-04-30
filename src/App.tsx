@@ -5,7 +5,8 @@ import LoginPage from "./pages/LoginPage"
 import RoleSelectionPage from "./pages/RoleSelectionPage"
 import RegisterFarmerPage from "./pages/RegisterFarmerPage"
 import RegisterLaborerPage from "./pages/RegisterLaborerPage"
-import DashboardPage from "./pages/DashboardPage"
+import LaboreDashboard from "./pages/LaboreDashboard"
+import FarmerDashboard from "./pages/FarmerDashboard"
 import CreateOrderPage from "./pages/CreateOrderPage"
 import ProtectedRoute from "./components/ProtectedRoute"
 
@@ -23,7 +24,8 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <LaboreDashboard />
+                <FarmerDashboard/>
               </ProtectedRoute>
             }
           />

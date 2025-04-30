@@ -14,13 +14,22 @@ import { Alert, AlertDescription } from "../components/ui/alert"
 import { Loader2 } from "lucide-react"
 import { createOrder } from "../lib/api"
 
+// Define the types for formData
+interface FormData {
+  description: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  wage: string;
+}
+
 export default function CreateOrderPage() {
   const navigate = useNavigate()
   const { user, token } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     description: "",
     location: "",
     startDate: "",
