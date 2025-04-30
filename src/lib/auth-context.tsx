@@ -44,8 +44,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem("token", token)
       setToken(token)
       setUser(user)
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Login gagal")
+    } catch (err: unknown) {
+      // Menggunakan instance dari Error untuk memeriksa tipe error
+      if (err instanceof Error) {
+        setError(err.message || "Login gagal")
+      } else {
+        setError("Terjadi kesalahan yang tidak terduga.")
+      }
     } finally {
       setIsLoading(false)
     }
