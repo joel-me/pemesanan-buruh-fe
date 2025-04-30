@@ -1,3 +1,5 @@
+// src/lib/auth-context.tsx
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import axios from "axios";
 
@@ -8,6 +10,7 @@ interface User {
   role: "farmer" | "laborer";
 }
 
+// Tipe untuk response login
 interface LoginResponse {
   token: string;
   user: User;
@@ -46,16 +49,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
 
       const { token, user } = response.data;
+
+      // Simpan token dan user di localStorage
       localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
       setToken(token);
       setUser(user);
-    } catch (err: unknown) {
-      // Menggunakan instance dari Error untuk memeriksa tipe error
-      if (err instanceof Error) {
-        setError(err.message || "Login gagal");
-      } else {
-        setError("Terjadi kesalahan yang tidak terduga.");
-      }
+    } catch (err: any) {
+      // Menangani error
+      setError(err?.response?.data?.message || "Login gagal");
     } finally {
       setIsLoading(false);
     }
@@ -63,6 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setToken(null);
     setUser(null);
   };
