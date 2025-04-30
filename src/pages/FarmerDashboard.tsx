@@ -2,44 +2,67 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
-// API call functions
+// ✅ Ambil hanya pesanan yang dibuat oleh petani yang login
 const fetchOrders = async (token: string) => {
-  const response = await fetch("https://web-pemesanan-buruh-be.vercel.app/api/orders", {
-    method: "GET",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-    },
-  });
-  
+  const response = await fetch(
+    "https://web-pemesanan-buruh-be.vercel.app/api/orders/my-placed-orders",
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
   if (!response.ok) {
-    throw new Error("Failed to fetch orders");
+    throw new Error("Failed to fetch farmer orders");
   }
 
-  return await response.json();
+  const result = await response.json();
+  return result.data; // pastikan backend kirim dalam { data: [...] }
 };
 
-const updateOrderStatus = async (token: string, orderId: string, newStatus: string) => {
-  const response = await fetch(`https://web-pemesanan-buruh-be.vercel.app/api/orders/${orderId}`, {
-    method: "PATCH",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ status: newStatus }),
-  });
+const updateOrderStatus = async (
+  token: string,
+  orderId: string,
+  newStatus: string
+) => {
+  const response = await fetch(
+    `https://web-pemesanan-buruh-be.vercel.app/api/orders/${orderId}/status`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: newStatus }),
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to update order status");
   }
 
-  return await response.json();
+  const result = await response.json();
+  return result.data;
 };
 
 export default function FarmerDashboard() {
@@ -71,12 +94,19 @@ export default function FarmerDashboard() {
     loadOrders();
   }, [user, token, navigate]);
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+  const handleStatusUpdate = async (
+    orderId: string,
+    newStatus: string
+  ) => {
     if (!token) return;
 
     try {
       const updatedOrder = await updateOrderStatus(token, orderId, newStatus);
-      setOrders(orders.map((order) => (order.id === updatedOrder.id ? updatedOrder : order)));
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === updatedOrder.id ? updatedOrder : order
+        )
+      );
     } catch (err) {
       console.error("Failed to update order status:", err);
     }
@@ -85,13 +115,29 @@ export default function FarmerDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Menunggu</Badge>;
+        return (
+          <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+            Menunggu
+          </Badge>
+        );
       case "accepted":
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800">Diterima</Badge>;
+        return (
+          <Badge variant="outline" className="bg-blue-100 text-blue-800">
+            Diterima
+          </Badge>
+        );
       case "completed":
-        return <Badge variant="outline" className="bg-green-100 text-green-800">Selesai</Badge>;
+        return (
+          <Badge variant="outline" className="bg-green-100 text-green-800">
+            Selesai
+          </Badge>
+        );
       case "cancelled":
-        return <Badge variant="outline" className="bg-red-100 text-red-800">Dibatalkan</Badge>;
+        return (
+          <Badge variant="outline" className="bg-red-100 text-red-800">
+            Dibatalkan
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -112,7 +158,11 @@ export default function FarmerDashboard() {
           <h1 className="text-xl font-bold">Dashboard Petani</h1>
           <div className="flex items-center gap-4">
             <span>Halo, {user?.username}</span>
-            <Button variant="outline" className="text-white border-white hover:bg-green-700" onClick={logout}>
+            <Button
+              variant="outline"
+              className="text-white border-white hover:bg-green-700"
+              onClick={logout}
+            >
               Keluar
             </Button>
           </div>
@@ -126,7 +176,10 @@ export default function FarmerDashboard() {
             <CardDescription>Kelola pesanan buruh tani Anda</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="bg-green-600 hover:bg-green-700 mb-4" onClick={() => navigate("/orders/create")}>
+            <Button
+              className="bg-green-600 hover:bg-green-700 mb-4"
+              onClick={() => navigate("/orders/create")}
+            >
               Buat Pesanan Baru
             </Button>
 
@@ -143,7 +196,11 @@ export default function FarmerDashboard() {
                   <div className="text-red-600">{error}</div>
                 ) : (
                   orders
-                    .filter((order) => order.status === "pending" || order.status === "accepted")
+                    .filter(
+                      (order) =>
+                        order.status === "pending" ||
+                        order.status === "accepted"
+                    )
                     .map((order) => (
                       <Card key={order.id} className="mb-4">
                         <CardHeader>
@@ -153,11 +210,15 @@ export default function FarmerDashboard() {
                         <CardContent>
                           <div>{getStatusBadge(order.status)}</div>
                           <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
-                          <div>Tanggal Selesai: {formatDate(order.endDate)}</div>
+                          <div>
+                            Tanggal Selesai: {formatDate(order.endDate)}
+                          </div>
 
                           {order.status === "pending" && (
                             <Button
-                              onClick={() => handleStatusUpdate(order.id, "accepted")}
+                              onClick={() =>
+                                handleStatusUpdate(order.id, "accepted")
+                              }
                               className="bg-blue-600 hover:bg-blue-700"
                             >
                               Terima Pesanan
@@ -165,21 +226,25 @@ export default function FarmerDashboard() {
                           )}
 
                           {order.status === "accepted" && (
-                            <Button
-                              onClick={() => handleStatusUpdate(order.id, "completed")}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              Tandai Selesai
-                            </Button>
-                          )}
+                            <>
+                              <Button
+                                onClick={() =>
+                                  handleStatusUpdate(order.id, "completed")
+                                }
+                                className="bg-green-600 hover:bg-green-700 mr-2"
+                              >
+                                Tandai Selesai
+                              </Button>
 
-                          {order.status === "accepted" && (
-                            <Button
-                              onClick={() => handleStatusUpdate(order.id, "cancelled")}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Batalkan Pesanan
-                            </Button>
+                              <Button
+                                onClick={() =>
+                                  handleStatusUpdate(order.id, "cancelled")
+                                }
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Batalkan Pesanan
+                              </Button>
+                            </>
                           )}
                         </CardContent>
                       </Card>
@@ -204,7 +269,9 @@ export default function FarmerDashboard() {
                         <CardContent>
                           <div>{getStatusBadge(order.status)}</div>
                           <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
-                          <div>Tanggal Selesai: {formatDate(order.endDate)}</div>
+                          <div>
+                            Tanggal Selesai: {formatDate(order.endDate)}
+                          </div>
                         </CardContent>
                       </Card>
                     ))

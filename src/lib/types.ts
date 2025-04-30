@@ -29,9 +29,9 @@ export type Order = {
 };
 
 export type LoginDto = {
-    username: string;  // Menggunakan username, bukan email
+    username: string;
     password: string;
-};
+  };
 
 export type RegisterFarmerDto = {
     username: string;
