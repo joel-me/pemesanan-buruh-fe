@@ -267,13 +267,6 @@ export default function FarmerDashboard() {
                             <CardTitle>{order.laborer.username}</CardTitle>
                             <CardDescription>{order.description}</CardDescription>
                           </CardHeader>
-                          <CardContent>
-                            <div className={`badge ${styles[order.status]}`}>
-                              {label[order.status] ?? order.status}
-                            </div>
-                            <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
-                            <div>Tanggal Selesai: {formatDate(order.endDate)}</div>
-                          </CardContent>
                         </Card>
                       ))
                   )
