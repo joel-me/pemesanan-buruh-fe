@@ -2,30 +2,17 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Loader2 } from "lucide-react";
 
 type OrderStatus = "PENDING" | "ACCEPTED" | "COMPLETED" | "CANCELLED";
 
 type Order = {
-  id: string | number;
+  id: string;
   description: string;
   status: OrderStatus;
-  laborer: {
-    username: string;
-  };
+  laborer: { username: string };
 };
 
 const styles: Record<OrderStatus, string> = {
@@ -50,9 +37,10 @@ const fetchOrders = async (token: string) => {
       throw new Error("Failed to fetch orders");
     }
     const result = await response.json();
+    console.log(result); // Log the result to check the structure of the data
     return result.data as Order[];
   } catch (error) {
-    throw new Error("Gagal mengambil pesanan");
+    throw new Error("Failed to fetch orders");
   }
 };
 
@@ -74,13 +62,13 @@ export default function FarmerDashboard() {
       try {
         const token = getToken();
         if (!token) {
-          setError("Token tidak ditemukan.");
+          setError("Token not found.");
           return;
         }
         const fetchedOrders = await fetchOrders(token);
-        setOrders(fetchedOrders || []);
+        setOrders(fetchedOrders);
       } catch (err) {
-        setError("Gagal memuat pesanan");
+        setError("Failed to load orders");
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -96,7 +84,7 @@ export default function FarmerDashboard() {
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-xl font-bold">Dashboard Petani</h1>
           <div className="flex items-center gap-4">
-            <span>Halo, {isAuthenticated ? "Petani" : "Tamu"}</span>
+            <span>Halo, Petani</span>
             <Button
               variant="outline"
               className="text-white border-white hover:bg-green-700"
@@ -112,7 +100,7 @@ export default function FarmerDashboard() {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Kelola Pesanan Anda</CardTitle>
-            <CardDescription>Nama buruh & status pesanan</CardDescription>
+            <CardDescription>Kelola pesanan buruh tani Anda</CardDescription>
           </CardHeader>
           <CardContent>
             <Button
@@ -133,7 +121,10 @@ export default function FarmerDashboard() {
                   <Loader2 className="animate-spin" />
                 ) : error ? (
                   <div className="text-red-600">{error}</div>
-                ) : orders.filter(order => order.status === "PENDING" || order.status === "ACCEPTED").length === 0 ? (
+                ) : orders.filter(
+                    (order) =>
+                      order.status === "PENDING" || order.status === "ACCEPTED"
+                  ).length === 0 ? (
                   <div className="text-center text-gray-600">Tidak ada pesanan aktif</div>
                 ) : (
                   orders
@@ -147,7 +138,7 @@ export default function FarmerDashboard() {
                         className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}
                       >
                         <p className="text-lg font-semibold">
-                          {order.laborer?.username}
+                          {order.laborer.username}
                         </p>
                         <p className="text-sm">Status: {order.status}</p>
                       </div>
@@ -160,7 +151,7 @@ export default function FarmerDashboard() {
                   <Loader2 className="animate-spin" />
                 ) : error ? (
                   <div className="text-red-600">{error}</div>
-                ) : orders.filter(order => order.status === "COMPLETED").length === 0 ? (
+                ) : orders.filter((order) => order.status === "COMPLETED").length === 0 ? (
                   <div className="text-center text-gray-600">Tidak ada pesanan selesai</div>
                 ) : (
                   orders
@@ -171,7 +162,7 @@ export default function FarmerDashboard() {
                         className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}
                       >
                         <p className="text-lg font-semibold">
-                          {order.laborer?.username}
+                          {order.laborer.username}
                         </p>
                         <p className="text-sm">Status: {order.status}</p>
                       </div>
