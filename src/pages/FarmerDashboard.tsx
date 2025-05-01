@@ -55,7 +55,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
       }
 
       const response = await getMyPlacedOrders(token);
-      console.log('API Response:', response); // Tambahkan ini untuk melihat respons API
+      console.log('API Response:', response);
 
       if (!Array.isArray(response)) {
         throw new Error('API response is not an array');
@@ -69,12 +69,14 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
           console.warn('Invalid order format:', item);
         }
       }
+      console.log("Validated Orders:", validatedOrders);
 
       if (validatedOrders.length === 0 && response.length > 0) {
         throw new Error('No valid orders found in response');
       }
 
       setOrders(validatedOrders);
+      console.log("Orders State:", orders);
     } catch (error: any) {
       console.error('Order fetch error:', error);
       setError(error?.message || 'An unknown error occurred while fetching orders');
