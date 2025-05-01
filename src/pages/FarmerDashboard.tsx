@@ -16,12 +16,38 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import { Loader2 } from "lucide-react";
-// Badge dihapus karena tidak digunakan
-// import { Badge } from "../components/ui/badge";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
-// ✅ Ambil hanya pesanan yang dibuat oleh petani yang login
+// Tipe status untuk membantu TypeScript
+type OrderStatus = "pending" | "accepted" | "completed" | "cancelled";
+
+// Tipe Order untuk data pesanan
+type Order = {
+  id: string;
+  farmerName: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  status: OrderStatus; // Status dengan tipe yang eksplisit
+};
+
+// Styling dan label untuk setiap status
+const styles: Record<OrderStatus, string> = {
+  pending: "bg-yellow-100 text-yellow-800",
+  accepted: "bg-blue-100 text-blue-800",
+  completed: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800",
+};
+
+const label: Record<OrderStatus, string> = {
+  pending: "Menunggu",
+  accepted: "Diterima",
+  completed: "Selesai",
+  cancelled: "Dibatalkan",
+};
+
+// Ambil hanya pesanan yang dibuat oleh petani yang login
 const fetchOrders = async (token: string) => {
   const response = await fetch(
     "https://web-pemesanan-buruh-be.vercel.app/api/orders/my-placed-orders",
@@ -38,13 +64,13 @@ const fetchOrders = async (token: string) => {
   }
 
   const result = await response.json();
-  return result.data; // pastikan backend kirim dalam { data: [...] }
+  return result.data as Order[]; // Pastikan backend kirim dalam { data: [...] }
 };
 
 const updateOrderStatus = async (
   token: string,
   orderId: string,
-  newStatus: string
+  newStatus: OrderStatus
 ) => {
   const response = await fetch(
     `https://web-pemesanan-buruh-be.vercel.app/api/orders/${orderId}/status`,
@@ -66,28 +92,10 @@ const updateOrderStatus = async (
   return result.data;
 };
 
-// Tipe status untuk membantu TypeScript
-type OrderStatus = "pending" | "accepted" | "completed" | "cancelled";
-
-// Styling dan label untuk setiap status
-const styles: Record<OrderStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  accepted: "bg-blue-100 text-blue-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-};
-
-const label: Record<OrderStatus, string> = {
-  pending: "Menunggu",
-  accepted: "Diterima",
-  completed: "Selesai",
-  cancelled: "Dibatalkan",
-};
-
 export default function FarmerDashboard() {
   const navigate = useNavigate();
   const { isAuthenticated, getToken, logout } = useAuth();
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]); // State untuk pesanan dengan tipe Order[]
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,7 +128,7 @@ export default function FarmerDashboard() {
 
   const handleStatusUpdate = async (
     orderId: string,
-    newStatus: string
+    newStatus: OrderStatus
   ) => {
     const token = getToken();
     if (!token) return;
@@ -202,11 +210,10 @@ export default function FarmerDashboard() {
                           <CardDescription>{order.description}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                          {/* Menambahkan fallback status */}
                           <div
-                            className={`badge ${styles[order.status as OrderStatus] ?? ""}`}
+                            className={`badge ${styles[order.status]}`}
                           >
-                            {label[order.status as OrderStatus] ?? order.status}
+                            {label[order.status] ?? order.status}
                           </div>
                           <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
                           <div>
@@ -267,9 +274,9 @@ export default function FarmerDashboard() {
                         </CardHeader>
                         <CardContent>
                           <div
-                            className={`badge ${styles[order.status as OrderStatus] ?? ""}`}
+                            className={`badge ${styles[order.status]}`}
                           >
-                            {label[order.status as OrderStatus] ?? order.status}
+                            {label[order.status] ?? order.status}
                           </div>
                           <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
                           <div>
