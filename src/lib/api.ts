@@ -104,7 +104,7 @@ export const getMyPlacedOrders = async (token: string): Promise<APIResponse<Orde
 export const updateOrderStatus = async (
   token: string,
   orderId: string,
-  status: string
+  status: "pending" | "accepted" | "completed" | "cancelled"
 ): Promise<APIResponse<Order>> => {
   const response = await fetch(`${API_PREFIX}/orders/${orderId}/status`, {
     method: 'PATCH',
