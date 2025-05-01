@@ -5,41 +5,74 @@ import { getMyPlacedOrders } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { Order } from '../lib/types';
 
+// Remove unused ApiResponse interface since we'll type the response directly
+// Also removed unused icon imports that were causing errors
+
 const FarmerDashboard: React.FC = () => {
   const { user, logout, getToken } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fungsi untuk memvalidasi data pesanan
-  const validateOrderData = (orders: Order[]) => {
-    return orders.every(order => order.id && order.farmerId && order.laborerId && order.status);
+  const validateOrder = (order: unknown): order is Order => {
+    return (
+      typeof order === 'object' &&
+      order !== null &&
+      'id' in order &&
+      'farmerId' in order &&
+      'laborerId' in order &&
+      'status' in order
+    );
+  };
+
+  const validateOrderData = (data: unknown): data is Order[] => {
+    if (!Array.isArray(data)) return false;
+    return data.every(validateOrder);
+  };
+
+  const fetchOrders = async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const token = getToken();
+      
+      // Type the response directly instead of using ApiResponse interface
+      const response = await getMyPlacedOrders(token);
+
+      if (!response || typeof response !== 'object' || !('data' in response)) {
+        throw new Error('Invalid API response structure');
+      }
+
+      if (!validateOrderData(response.data)) {
+        throw new Error('Received invalid orders data format');
+      }
+
+      setOrders(response.data);
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load orders');
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const token = getToken();
-        const response = await getMyPlacedOrders(token);
-
-        // Validasi data pesanan sebelum diproses
-        if (!validateOrderData(response.data)) {
-          console.error('Data pesanan tidak valid:', response.data);
-        } else {
-          setOrders(response.data);
-        }
-      } catch (error) {
-        console.error('Gagal mengambil pesanan:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
   }, [getToken]);
 
   const activeOrders = orders.filter(order => order.status === 'pending');
   const completedOrders = orders.filter(order => order.status === 'completed');
+
+  const renderOrderCard = (order: Order, bgClass: string, textClass: string) => (
+    <div key={order.id} className={`border p-4 rounded-lg mb-2 ${bgClass}`}>
+      <p className="font-semibold">
+        {order.laborer?.name || 'Nama buruh'} - <span className={textClass}>{order.status}</span>
+      </p>
+      <p className="text-gray-700">{order.description}</p>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -59,38 +92,41 @@ const FarmerDashboard: React.FC = () => {
           </div>
 
           {loading ? (
-            <p>Memuat data pesanan...</p>
+            <div className="flex justify-center items-center p-8">
+              <p className="text-gray-500">Memuat data pesanan...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
+              <p className="text-red-600 font-medium">Error: {error}</p>
+              <Button 
+                variant="outline" 
+                className="mt-2" 
+                onClick={() => fetchOrders()}
+              >
+                Coba Lagi
+              </Button>
+            </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pesanan Aktif</h3>
                 {activeOrders.length > 0 ? (
-                  activeOrders.map(order => (
-                    <div key={order.id} className="border p-4 rounded-lg mb-2 bg-yellow-50">
-                      <p className="font-semibold">
-                        {order.laborer?.name || 'Nama buruh'} - <span className="text-yellow-700">{order.status}</span>
-                      </p>
-                      <p className="text-gray-700">{order.description}</p>
-                    </div>
-                  ))
+                  activeOrders.map(order => renderOrderCard(order, 'bg-yellow-50', 'text-yellow-700'))
                 ) : (
-                  <p className="text-gray-500">Tidak ada pesanan aktif</p>
+                  <div className="border border-dashed p-4 rounded-lg bg-gray-50">
+                    <p className="text-gray-500 text-center">Tidak ada pesanan aktif</p>
+                  </div>
                 )}
               </div>
 
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pesanan Selesai</h3>
                 {completedOrders.length > 0 ? (
-                  completedOrders.map(order => (
-                    <div key={order.id} className="border p-4 rounded-lg mb-2 bg-green-50">
-                      <p className="font-semibold">
-                        {order.laborer?.name || 'Nama buruh'} - <span className="text-green-700">{order.status}</span>
-                      </p>
-                      <p className="text-gray-700">{order.description}</p>
-                    </div>
-                  ))
+                  completedOrders.map(order => renderOrderCard(order, 'bg-green-50', 'text-green-700'))
                 ) : (
-                  <p className="text-gray-500">Tidak ada pesanan selesai</p>
+                  <div className="border border-dashed p-4 rounded-lg bg-gray-50">
+                    <p className="text-gray-500 text-center">Tidak ada pesanan selesai</p>
+                  </div>
                 )}
               </div>
             </div>
