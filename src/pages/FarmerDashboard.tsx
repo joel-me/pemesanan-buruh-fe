@@ -28,8 +28,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
         (!order.updatedAt || typeof order.updatedAt === 'string') &&
         (!order.laborer ||
           (typeof order.laborer === 'object' &&
-           order.laborer !== null &&
-           typeof order.laborer.username === 'string'));
+            order.laborer !== null &&
+            typeof order.laborer.username === 'string'));
 
       if (!isValid) {
         console.log('Invalid Order Object:', order);
