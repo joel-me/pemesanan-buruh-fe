@@ -14,6 +14,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Validasi tipe Order
   const validateOrder = (order: any): order is Order => {
     try {
       const isValid =
@@ -42,6 +43,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
     }
   };
 
+  // Ambil data pesanan dari API
   const fetchOrders = async () => {
     try {
       setError(null);
@@ -53,7 +55,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
       }
 
       const response = await getMyPlacedOrders(token);
-      console.log('API Response:', response);
+      console.log('API Response:', response); // Tambahkan ini untuk melihat respons API
 
       if (!Array.isArray(response)) {
         throw new Error('API response is not an array');
@@ -89,6 +91,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
   const activeOrders = orders.filter(order => order.status?.toLowerCase() === 'pending');
   const completedOrders = orders.filter(order => order.status?.toLowerCase() === 'completed');
 
+  // Render kartu pesanan
   const renderOrderCard = (order: Order, bgClass: string, textClass: string) => (
     <div key={order.id} className={`border p-4 rounded-lg mb-2 ${bgClass}`}>
       <p className="font-semibold">
