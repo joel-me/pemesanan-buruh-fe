@@ -17,14 +17,15 @@ const FarmerDashboard: React.FC = () => {
         const token = getToken();
         const response = await getMyPlacedOrders(token);
 
-        // Log the response to check the data format
-        console.log(response);
+        // Log the response to check the data structure
+        console.log('Response:', response);
 
-        if (response.data && Array.isArray(response.data)) {
+        // Check if the response is structured properly
+        if (response && response.data && Array.isArray(response.data)) {
           setOrders(response.data);
         } else {
-          console.error('Data pesanan tidak valid:', response.data);
-          setOrders([]); // Fallback if data is invalid
+          console.error('Data pesanan tidak valid:', response);
+          setOrders([]); // Fallback if the data is invalid
         }
       } catch (error) {
         console.error('Gagal mengambil pesanan:', error);
