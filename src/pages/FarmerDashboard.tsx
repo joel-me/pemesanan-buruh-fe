@@ -16,7 +16,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
 
   const validateOrder = (order: unknown): order is Order => {
     try {
-      return (
+      const isValid = (
         typeof order === 'object' &&
         order !== null &&
         'id' in order &&
@@ -29,13 +29,16 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
         typeof order.status === 'string' &&
         'description' in order &&
         typeof order.description === 'string' &&
-        // Make createdAt and updatedAt optional based on the API response
         ('createdAt' in order ? typeof order.createdAt === 'string' : true) &&
         ('updatedAt' in order ? typeof order.updatedAt === 'string' : true) &&
         ('laborer' in order
           ? typeof order.laborer === 'object' && order.laborer !== null && 'name' in order.laborer && typeof order.laborer.name === 'string'
           : true)
       );
+      if (!isValid) {
+        console.log('Invalid Order Object:', order); // Log the invalid object for debugging
+      }
+      return isValid;
     } catch (err) {
       console.error('Order validation error:', err);
       return false;
