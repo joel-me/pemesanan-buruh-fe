@@ -5,9 +5,6 @@ import { getMyPlacedOrders } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { Order } from '../lib/types';
 
-// Remove unused ApiResponse interface since we'll type the response directly
-// Also removed unused icon imports that were causing errors
-
 const FarmerDashboard: React.FC = () => {
   const { user, logout, getToken } = useAuth();
   const navigate = useNavigate();
@@ -16,19 +13,19 @@ const FarmerDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const validateOrder = (order: unknown): order is Order => {
-    return (
-      typeof order === 'object' &&
-      order !== null &&
-      'id' in order &&
-      'farmerId' in order &&
-      'laborerId' in order &&
-      'status' in order
-    );
-  };
-
-  const validateOrderData = (data: unknown): data is Order[] => {
-    if (!Array.isArray(data)) return false;
-    return data.every(validateOrder);
+    try {
+      return (
+        typeof order === 'object' &&
+        order !== null &&
+        'id' in order &&
+        'farmerId' in order &&
+        'laborerId' in order &&
+        'status' in order
+      );
+    } catch (err) {
+      console.error('Order validation error:', err);
+      return false;
+    }
   };
 
   const fetchOrders = async () => {
@@ -37,21 +34,52 @@ const FarmerDashboard: React.FC = () => {
       setLoading(true);
       const token = getToken();
       
-      // Type the response directly instead of using ApiResponse interface
+      // First validate the token exists
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+
       const response = await getMyPlacedOrders(token);
+      
+      // Debugging: Log the raw response
+      console.log('API Response:', response);
 
-      if (!response || typeof response !== 'object' || !('data' in response)) {
-        throw new Error('Invalid API response structure');
+      // Validate the response structure
+      if (!response || typeof response !== 'object') {
+        throw new Error('API returned invalid response format');
       }
 
-      if (!validateOrderData(response.data)) {
-        throw new Error('Received invalid orders data format');
+      // Check if data exists and is an array
+      if (!('data' in response)) {
+        throw new Error('API response missing data field');
       }
 
-      setOrders(response.data);
+      if (!Array.isArray(response.data)) {
+        throw new Error('API data is not an array');
+      }
+
+      // Validate each order in the array
+      const validatedOrders: Order[] = [];
+      for (const item of response.data) {
+        if (validateOrder(item)) {
+          validatedOrders.push(item);
+        } else {
+          console.warn('Invalid order format:', item);
+        }
+      }
+
+      if (validatedOrders.length === 0 && response.data.length > 0) {
+        throw new Error('No valid orders found in response');
+      }
+
+      setOrders(validatedOrders);
     } catch (error) {
-      console.error('Failed to fetch orders:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load orders');
+      console.error('Order fetch error:', error);
+      setError(
+        error instanceof Error 
+          ? error.message 
+          : 'An unknown error occurred while fetching orders'
+      );
       setOrders([]);
     } finally {
       setLoading(false);
@@ -76,6 +104,7 @@ const FarmerDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      {/* Header remains the same */}
       <header className="bg-white shadow p-6 rounded-xl mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Dashboard Petani</h1>
@@ -98,16 +127,18 @@ const FarmerDashboard: React.FC = () => {
           ) : error ? (
             <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
               <p className="text-red-600 font-medium">Error: {error}</p>
+              <p className="text-sm text-red-500 mb-2">Please check your connection and try again</p>
               <Button 
                 variant="outline" 
                 className="mt-2" 
-                onClick={() => fetchOrders()}
+                onClick={fetchOrders}
               >
                 Coba Lagi
               </Button>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
+              {/* Order display sections remain the same */}
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pesanan Aktif</h3>
                 {activeOrders.length > 0 ? (
