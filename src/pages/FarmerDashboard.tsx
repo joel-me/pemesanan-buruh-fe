@@ -11,32 +11,25 @@ const FarmerDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Fungsi untuk memvalidasi data pesanan
+  const validateOrderData = (orders: Order[]) => {
+    return orders.every(order => order.id && order.farmerId && order.laborerId && order.status);
+  };
+
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const token = getToken();
         const response = await getMyPlacedOrders(token);
 
-        // Log the response to check the data structure
-        console.log('Response:', response);
-
-        // Validate if response.data is an array and contains valid order objects
-        if (response && Array.isArray(response.data) && response.data.length > 0) {
-          // Ensure each item in response.data is an order object
-          const validOrders = response.data.filter((order: any) => order && order.id && order.status);
-          if (validOrders.length === response.data.length) {
-            setOrders(response.data); // Data is valid, set orders
-          } else {
-            console.error('Beberapa data pesanan tidak valid:', response.data);
-            setOrders([]); // Fallback if some orders are invalid
-          }
+        // Validasi data pesanan sebelum diproses
+        if (!validateOrderData(response.data)) {
+          console.error('Data pesanan tidak valid:', response.data);
         } else {
-          console.error('Data pesanan tidak valid:', response);
-          setOrders([]); // Fallback if response is not valid
+          setOrders(response.data);
         }
       } catch (error) {
         console.error('Gagal mengambil pesanan:', error);
-        setOrders([]); // Fallback in case of error
       } finally {
         setLoading(false);
       }
@@ -45,8 +38,8 @@ const FarmerDashboard: React.FC = () => {
     fetchOrders();
   }, [getToken]);
 
-  const activeOrders = orders.filter(order => order.status === 'pending'); // Status dengan kapital
-const completedOrders = orders.filter(order => order.status === 'completed'); // Status dengan kapital
+  const activeOrders = orders.filter(order => order.status === 'pending');
+  const completedOrders = orders.filter(order => order.status === 'completed');
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
