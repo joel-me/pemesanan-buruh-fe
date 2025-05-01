@@ -3,53 +3,122 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Alert, AlertDescription } from "../components/ui/alert";
-import { useAuth } from "../lib/auth-context"; // Mengimpor hook useAuth
-import { getLaborerData } from "../lib/api"; // Mengimpor fungsi untuk mendapatkan data laborer
+import { useAuth } from "../lib/auth-context";
+import { getMyOrders } from "../lib/api";
+import { Order } from "../lib/types";
 
 export default function LaboreDashboard() {
-  const { isAuthenticated, getToken, logout } = useAuth();
-  const [laborerData, setLaborerData] = useState<any>(null); // Data laborer
+  const { user, getToken, logout } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login"); // Arahkan ke halaman login jika tidak terautentikasi
-    }
-
-    const fetchLaborerData = async () => {
+  const fetchOrders = async () => {
+    try {
       setIsLoading(true);
       setError(null);
+      const token = getToken();
 
-      try {
-        const token = getToken();
-        if (!token) {
-          throw new Error("Token tidak ditemukan");
-        }
-
-        const response = await getLaborerData(token); // Panggil API untuk mendapatkan data laborer
-        setLaborerData(response.data); // Pastikan response.data sesuai dengan format yang diharapkan
-      } catch (err) {
-        setError("Gagal memuat data laborer.");
-      } finally {
-        setIsLoading(false);
+      if (!token) {
+        throw new Error("Token tidak ditemukan");
       }
-    };
 
-    fetchLaborerData();
-  }, [isAuthenticated, navigate, getToken]);
+      const response = await getMyOrders(token);
+      console.log('API Response:', response);
+
+      if (!Array.isArray(response)) {
+        throw new Error('API response is not an array');
+      }
+
+      setOrders(response);
+    } catch (err: any) {
+      console.error('Order fetch error:', err);
+      setError(err?.message || 'Gagal memuat data pesanan');
+      setOrders([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   const handleLogout = () => {
-    logout(); // Logout dan bersihkan token
-    navigate("/login"); // Arahkan kembali ke halaman login
+    logout();
+    navigate("/login");
+  };
+
+  const renderOrderCard = (order: Order) => {
+    const statusColors = {
+      pending: 'bg-yellow-50 text-yellow-700',
+      accepted: 'bg-blue-50 text-blue-700',
+      completed: 'bg-green-50 text-green-700',
+      cancelled: 'bg-red-50 text-red-700'
+    };
+
+    const statusText = {
+      pending: 'Menunggu Konfirmasi',
+      accepted: 'Diterima',
+      completed: 'Selesai',
+      cancelled: 'Dibatalkan'
+    };
+
+    return (
+      <Card key={order.id} className="p-4 mb-4">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h3 className="font-semibold text-gray-800">Pesanan #{order.id}</h3>
+            <p className={`text-sm font-medium ${statusColors[order.status]}`}>
+              Status: {statusText[order.status]}
+            </p>
+          </div>
+          <span className="text-xs text-gray-500">
+            {new Date(order.createdAt).toLocaleDateString('id-ID')}
+          </span>
+        </div>
+        <p className="text-gray-700 mb-2">{order.description}</p>
+        <div className="flex justify-end gap-2">
+          {order.status === 'pending' && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                // TODO: Add accept order functionality
+                console.log('Accept order:', order.id);
+              }}
+            >
+              Terima Pesanan
+            </Button>
+          )}
+          {order.status === 'accepted' && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                // TODO: Add complete order functionality
+                console.log('Complete order:', order.id);
+              }}
+            >
+              Tandai Selesai
+            </Button>
+          )}
+        </div>
+      </Card>
+    );
   };
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="container mx-auto px-4">
-        <Card className="max-w-2xl mx-auto p-6">
-          <h1 className="text-2xl font-bold text-center mb-6">Dashboard Laborer</h1>
+        <Card className="max-w-4xl mx-auto p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Dashboard Buruh</h1>
+            <Button onClick={handleLogout} variant="destructive">
+              Keluar
+            </Button>
+          </div>
 
           {error && (
             <Alert variant="destructive" className="mb-4">
@@ -58,31 +127,20 @@ export default function LaboreDashboard() {
           )}
 
           {isLoading ? (
-            <div className="text-center">
-              <p>Loading...</p>
+            <div className="text-center py-8">
+              <p className="text-gray-500">Memuat data pesanan...</p>
             </div>
           ) : (
-            <>
-              {laborerData ? (
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-bold">Nama: {laborerData.name}</h3>
-                    <p>Keahlian: {laborerData.skill}</p>
-                    <p>Status: {laborerData.status}</p>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <Button onClick={handleLogout} className="bg-red-600 hover:bg-red-700">
-                      Logout
-                    </Button>
-                  </div>
-                </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Daftar Pesanan</h2>
+              {orders.length > 0 ? (
+                orders.map(renderOrderCard)
               ) : (
-                <div className="text-center">
-                  <p>No data available</p>
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Belum ada pesanan yang masuk</p>
                 </div>
               )}
-            </>
+            </div>
           )}
         </Card>
       </div>

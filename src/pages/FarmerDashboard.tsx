@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '../components/ui/button';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../lib/auth-context';
 import { getMyPlacedOrders } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { Order } from '../lib/types';
@@ -54,6 +54,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
         throw new Error('Authentication token not found');
       }
 
+      if (!user?.id) {
+        throw new Error('User ID not found');
+      }
+
       const response = await getMyPlacedOrders(token);
       console.log('API Response:', response);
 
@@ -61,8 +65,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
         throw new Error('API response is not an array');
       }
 
+      // Filter orders based on the logged-in user's ID
+      const userOrders = response.filter(order => order.farmerId === user.id);
+
       const validatedOrders: Order[] = [];
-      for (const item of response) {
+      for (const item of userOrders) {
         if (validateOrder(item)) {
           validatedOrders.push(item);
         } else {
@@ -71,7 +78,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
       }
       console.log("Validated Orders:", validatedOrders);
 
-      if (validatedOrders.length === 0 && response.length > 0) {
+      if (validatedOrders.length === 0 && userOrders.length > 0) {
         throw new Error('No valid orders found in response');
       }
 
@@ -129,7 +136,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
       <header className="bg-white shadow p-6 rounded-xl mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Dashboard Petani</h1>
-          <p className="text-gray-600">Halo, {user?.name || 'Pengguna'}</p>
+          <p className="text-gray-600">Halo, {user?.username || 'Pengguna'}</p>
         </div>
         <Button onClick={() => { logout(); navigate('/login'); }}>Keluar</Button>
       </header>
