@@ -19,23 +19,16 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
       const isValid = (
         typeof order === 'object' &&
         order !== null &&
-        'id' in order &&
-        typeof (order as any).id === 'number' &&
-        'farmerId' in order &&
-        typeof (order as any).farmerId === 'number' &&
-        'laborerId' in order &&
-        typeof (order as any).laborerId === 'number' &&
-        'status' in order &&
-        typeof (order as any).status === 'string' &&
-        'description' in order &&
-        typeof (order as any).description === 'string' &&
-        ('createdAt' in order ? typeof (order as any).createdAt === 'string' : true) &&
-        ('updatedAt' in order ? typeof (order as any).updatedAt === 'string' : true) &&
+        'id' in order && typeof order.id === 'number' &&
+        'farmerId' in order && typeof order.farmerId === 'number' &&
+        'laborerId' in order && typeof order.laborerId === 'number' &&
+        'status' in order && typeof order.status === 'string' &&
+        'description' in order && typeof order.description === 'string' &&
+        ('createdAt' in order ? typeof order.createdAt === 'string' : true) &&
+        ('updatedAt' in order ? typeof order.updatedAt === 'string' : true) &&
         ('laborer' in order
-          ? typeof (order as any).laborer === 'object' &&
-            (order as any).laborer !== null &&
-            'username' in (order as any).laborer &&
-            typeof (order as any).laborer.username === 'string'
+          ? typeof order.laborer === 'object' && order.laborer !== null &&
+            'username' in order.laborer && typeof order.laborer.username === 'string'
           : true)
       );
       if (!isValid) {
@@ -129,7 +122,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
           ) : error ? (
             <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
               <p className="text-red-600 font-medium">Error: {error}</p>
-              <p className="text-sm text-red-500 mb-2">Periksa koneksi Anda dan coba lagi</p>
+              <p className="text-sm text-red-500 mb-2">Silakan cek koneksi Anda dan coba lagi</p>
               <Button
                 variant="outline"
                 className="mt-2"
