@@ -14,26 +14,27 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const validateOrder = (order: unknown): order is Order => {
+  const validateOrder = (order: any): order is Order => {
     try {
-      const isValid = (
+      const isValid =
         typeof order === 'object' &&
         order !== null &&
-        'id' in order && typeof order.id === 'number' &&
-        'farmerId' in order && typeof order.farmerId === 'number' &&
-        'laborerId' in order && typeof order.laborerId === 'number' &&
-        'status' in order && typeof order.status === 'string' &&
-        'description' in order && typeof order.description === 'string' &&
-        ('createdAt' in order ? typeof order.createdAt === 'string' : true) &&
-        ('updatedAt' in order ? typeof order.updatedAt === 'string' : true) &&
-        ('laborer' in order
-          ? typeof order.laborer === 'object' && order.laborer !== null &&
-            'username' in order.laborer && typeof order.laborer.username === 'string'
-          : true)
-      );
+        typeof order.id === 'number' &&
+        typeof order.farmerId === 'number' &&
+        typeof order.laborerId === 'number' &&
+        typeof order.status === 'string' &&
+        typeof order.description === 'string' &&
+        (!order.createdAt || typeof order.createdAt === 'string') &&
+        (!order.updatedAt || typeof order.updatedAt === 'string') &&
+        (!order.laborer ||
+          (typeof order.laborer === 'object' &&
+           order.laborer !== null &&
+           typeof order.laborer.username === 'string'));
+
       if (!isValid) {
         console.log('Invalid Order Object:', order);
       }
+
       return isValid;
     } catch (err) {
       console.error('Order validation error:', err);
@@ -52,7 +53,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
       }
 
       const response = await getMyPlacedOrders(token);
-
       console.log('API Response:', response);
 
       if (!Array.isArray(response)) {
@@ -92,7 +92,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
   const renderOrderCard = (order: Order, bgClass: string, textClass: string) => (
     <div key={order.id} className={`border p-4 rounded-lg mb-2 ${bgClass}`}>
       <p className="font-semibold">
-        {order.laborer?.name || 'Nama buruh'} - <span className={textClass}>{order.status}</span>
+        {order.laborer?.username || 'Nama buruh'} - <span className={textClass}>{order.status}</span>
       </p>
       <p className="text-gray-700">{order.description}</p>
     </div>
@@ -122,12 +122,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
           ) : error ? (
             <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
               <p className="text-red-600 font-medium">Error: {error}</p>
-              <p className="text-sm text-red-500 mb-2">Silakan cek koneksi Anda dan coba lagi</p>
-              <Button
-                variant="outline"
-                className="mt-2"
-                onClick={fetchOrders}
-              >
+              <p className="text-sm text-red-500 mb-2">Silakan periksa koneksi Anda dan coba lagi.</p>
+              <Button variant="outline" className="mt-2" onClick={fetchOrders}>
                 Coba Lagi
               </Button>
             </div>
@@ -136,7 +132,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pesanan Aktif</h3>
                 {activeOrders.length > 0 ? (
-                  activeOrders.map(order => renderOrderCard(order, 'bg-yellow-50', 'text-yellow-700'))
+                  activeOrders.map(order =>
+                    renderOrderCard(order, 'bg-yellow-50', 'text-yellow-700')
+                  )
                 ) : (
                   <div className="border border-dashed p-4 rounded-lg bg-gray-50">
                     <p className="text-gray-500 text-center">Tidak ada pesanan aktif</p>
@@ -147,7 +145,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pesanan Selesai</h3>
                 {completedOrders.length > 0 ? (
-                  completedOrders.map(order => renderOrderCard(order, 'bg-green-50', 'text-green-700'))
+                  completedOrders.map(order =>
+                    renderOrderCard(order, 'bg-green-50', 'text-green-700')
+                  )
                 ) : (
                   <div className="border border-dashed p-4 rounded-lg bg-gray-50">
                     <p className="text-gray-500 text-center">Tidak ada pesanan selesai</p>

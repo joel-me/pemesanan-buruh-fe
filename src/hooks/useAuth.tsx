@@ -37,7 +37,7 @@ export type Order = {
     laborerId: string;
     laborer?: {
       id: string;
-      name: string;
+      username: string;
     };
   };
   

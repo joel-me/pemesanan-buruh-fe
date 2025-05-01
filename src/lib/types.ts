@@ -28,7 +28,7 @@ export type APIResponse<T> = {
     laborerId: string;
     laborer?: {
       id: string;
-      name: string;
+      username: string;
     };
   };
   
