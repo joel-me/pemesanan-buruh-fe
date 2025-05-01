@@ -26,8 +26,13 @@ export type Order = {
     status: "pending" | "accepted" | "completed" | "cancelled";
     farmerId: string;
     laborerId: string;
-};
-
+    laborer?: {
+      id: string;
+      name: string;
+    };
+  };
+  
+  
 export type LoginDto = {
     username: string;
     password: string;

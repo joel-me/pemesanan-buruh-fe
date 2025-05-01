@@ -13,6 +13,11 @@ export const useAuth = () => {
   const logout = () => {
     setIsAuthenticated(false);
     setUser(null);
+    localStorage.removeItem('token');
+  };
+
+  const getToken = () => {
+    return localStorage.getItem('token') || '';
   };
 
   return {
@@ -20,5 +25,6 @@ export const useAuth = () => {
     user,
     login,
     logout,
+    getToken, // ✅ pastikan ini dikembalikan
   };
 };
