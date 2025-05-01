@@ -16,7 +16,8 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import { Loader2 } from "lucide-react";
-import { Badge } from "../components/ui/badge";
+// Badge dihapus karena tidak digunakan
+// import { Badge } from "../components/ui/badge";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -63,6 +64,24 @@ const updateOrderStatus = async (
 
   const result = await response.json();
   return result.data;
+};
+
+// Tipe status untuk membantu TypeScript
+type OrderStatus = "pending" | "accepted" | "completed" | "cancelled";
+
+// Styling dan label untuk setiap status
+const styles: Record<OrderStatus, string> = {
+  pending: "bg-yellow-100 text-yellow-800",
+  accepted: "bg-blue-100 text-blue-800",
+  completed: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800",
+};
+
+const label: Record<OrderStatus, string> = {
+  pending: "Menunggu",
+  accepted: "Diterima",
+  completed: "Selesai",
+  cancelled: "Dibatalkan",
 };
 
 export default function FarmerDashboard() {
@@ -115,37 +134,6 @@ export default function FarmerDashboard() {
       );
     } catch (err) {
       console.error("Failed to update order status:", err);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return (
-          <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-            Menunggu
-          </Badge>
-        );
-      case "accepted":
-        return (
-          <Badge variant="outline" className="bg-blue-100 text-blue-800">
-            Diterima
-          </Badge>
-        );
-      case "completed":
-        return (
-          <Badge variant="outline" className="bg-green-100 text-green-800">
-            Selesai
-          </Badge>
-        );
-      case "cancelled":
-        return (
-          <Badge variant="outline" className="bg-red-100 text-red-800">
-            Dibatalkan
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
@@ -214,7 +202,12 @@ export default function FarmerDashboard() {
                           <CardDescription>{order.description}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <div>{getStatusBadge(order.status)}</div>
+                          {/* Menambahkan fallback status */}
+                          <div
+                            className={`badge ${styles[order.status as OrderStatus] ?? ""}`}
+                          >
+                            {label[order.status as OrderStatus] ?? order.status}
+                          </div>
                           <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
                           <div>
                             Tanggal Selesai: {formatDate(order.endDate)}
@@ -273,7 +266,11 @@ export default function FarmerDashboard() {
                           <CardDescription>{order.description}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <div>{getStatusBadge(order.status)}</div>
+                          <div
+                            className={`badge ${styles[order.status as OrderStatus] ?? ""}`}
+                          >
+                            {label[order.status as OrderStatus] ?? order.status}
+                          </div>
                           <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
                           <div>
                             Tanggal Selesai: {formatDate(order.endDate)}
