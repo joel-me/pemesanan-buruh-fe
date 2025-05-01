@@ -20,12 +20,19 @@ const FarmerDashboard: React.FC = () => {
         // Log the response to check the data structure
         console.log('Response:', response);
 
-        // Check if the response is structured properly
-        if (response && response.data && Array.isArray(response.data)) {
-          setOrders(response.data);
+        // Validate if response.data is an array and contains valid order objects
+        if (response && Array.isArray(response.data) && response.data.length > 0) {
+          // Ensure each item in response.data is an order object
+          const validOrders = response.data.filter((order: any) => order && order.id && order.status);
+          if (validOrders.length === response.data.length) {
+            setOrders(response.data); // Data is valid, set orders
+          } else {
+            console.error('Beberapa data pesanan tidak valid:', response.data);
+            setOrders([]); // Fallback if some orders are invalid
+          }
         } else {
           console.error('Data pesanan tidak valid:', response);
-          setOrders([]); // Fallback if the data is invalid
+          setOrders([]); // Fallback if response is not valid
         }
       } catch (error) {
         console.error('Gagal mengambil pesanan:', error);
@@ -38,8 +45,8 @@ const FarmerDashboard: React.FC = () => {
     fetchOrders();
   }, [getToken]);
 
-  const activeOrders = orders.filter(order => order.status === 'pending');
-  const completedOrders = orders.filter(order => order.status === 'completed');
+  const activeOrders = orders.filter(order => order.status === 'pending'); // Status dengan kapital
+const completedOrders = orders.filter(order => order.status === 'completed'); // Status dengan kapital
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
