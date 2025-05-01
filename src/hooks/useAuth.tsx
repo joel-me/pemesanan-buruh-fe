@@ -28,3 +28,16 @@ export const useAuth = () => {
     getToken, // ✅ pastikan ini dikembalikan
   };
 };
+export type Order = {
+    id: string;
+    description: string;
+    createdAt: string;
+    status: "pending" | "accepted" | "completed" | "cancelled";
+    farmerId: string;
+    laborerId: string;
+    laborer?: {
+      id: string;
+      name: string;
+    };
+  };
+  
