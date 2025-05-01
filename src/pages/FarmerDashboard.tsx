@@ -25,11 +25,17 @@ type OrderStatus = "pending" | "accepted" | "completed" | "cancelled";
 // Tipe Order untuk data pesanan
 type Order = {
   id: string;
-  farmerName: string;
+  farmerId: string;
+  laborerId: string;
+  status: OrderStatus; 
   description: string;
+  laborer: {
+    id: string;
+    username: string;
+    skills: string[];
+  };
   startDate: string;
   endDate: string;
-  status: OrderStatus; // Status dengan tipe yang eksplisit
 };
 
 // Styling dan label untuk setiap status
@@ -64,7 +70,7 @@ const fetchOrders = async (token: string) => {
   }
 
   const result = await response.json();
-  return result.data as Order[]; // Pastikan backend kirim dalam { data: [...] }
+  return result.data as Order[];
 };
 
 const updateOrderStatus = async (
@@ -95,7 +101,7 @@ const updateOrderStatus = async (
 export default function FarmerDashboard() {
   const navigate = useNavigate();
   const { isAuthenticated, getToken, logout } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]); // State untuk pesanan dengan tipe Order[]
+  const [orders, setOrders] = useState<Order[]>([]); 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -206,14 +212,14 @@ export default function FarmerDashboard() {
                     .map((order) => (
                       <Card key={order.id} className="mb-4">
                         <CardHeader>
-                          <CardTitle>{order.farmerName}</CardTitle>
+                          <CardTitle>{order.laborer.username}</CardTitle> {/* Display laborer's username */}
                           <CardDescription>{order.description}</CardDescription>
                         </CardHeader>
                         <CardContent>
                           <div
-                            className={`badge ${styles[order.status]}`}
+                            className={`badge ${styles[order.status.toLowerCase() as OrderStatus]}`} // Convert status to lowercase
                           >
-                            {label[order.status] ?? order.status}
+                            {label[order.status.toLowerCase() as OrderStatus]} {/* Display label */}
                           </div>
                           <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
                           <div>
@@ -269,14 +275,14 @@ export default function FarmerDashboard() {
                     .map((order) => (
                       <Card key={order.id} className="mb-4">
                         <CardHeader>
-                          <CardTitle>{order.farmerName}</CardTitle>
+                          <CardTitle>{order.laborer.username}</CardTitle>
                           <CardDescription>{order.description}</CardDescription>
                         </CardHeader>
                         <CardContent>
                           <div
-                            className={`badge ${styles[order.status]}`}
+                            className={`badge ${styles[order.status.toLowerCase() as OrderStatus]}`}
                           >
-                            {label[order.status] ?? order.status}
+                            {label[order.status.toLowerCase() as OrderStatus]}
                           </div>
                           <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
                           <div>
