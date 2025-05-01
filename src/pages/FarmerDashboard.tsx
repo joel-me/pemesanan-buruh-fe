@@ -40,6 +40,7 @@ const fetchOrders = async (token: string) => {
     console.log(result); // Log the result to check the structure of the data
     return result.data || []; // Make sure to return an empty array if no data is present
   } catch (error) {
+    console.error("Error fetching orders:", error);
     throw new Error("Failed to fetch orders");
   }
 };
