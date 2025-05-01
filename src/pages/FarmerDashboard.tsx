@@ -25,11 +25,11 @@ type OrderStatus = "pending" | "accepted" | "completed" | "cancelled";
 // Tipe Order untuk data pesanan
 type Order = {
   id: string;
-  farmerName: string;
   description: string;
   startDate: string;
   endDate: string;
-  status: OrderStatus; // Status dengan tipe yang eksplisit
+  status: OrderStatus;
+  laborer: { username: string }; // Asumsi laborer adalah yang menangani pesanan
 };
 
 // Styling dan label untuk setiap status
@@ -206,7 +206,7 @@ export default function FarmerDashboard() {
                     .map((order) => (
                       <Card key={order.id} className="mb-4">
                         <CardHeader>
-                          <CardTitle>{order.farmerName}</CardTitle>
+                          <CardTitle>{order.laborer.username}</CardTitle>
                           <CardDescription>{order.description}</CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -269,7 +269,7 @@ export default function FarmerDashboard() {
                     .map((order) => (
                       <Card key={order.id} className="mb-4">
                         <CardHeader>
-                          <CardTitle>{order.farmerName}</CardTitle>
+                          <CardTitle>{order.laborer.username}</CardTitle>
                           <CardDescription>{order.description}</CardDescription>
                         </CardHeader>
                         <CardContent>
