@@ -30,15 +30,18 @@ export default function LaboreDashboard() {
 
       const response = await getMyOrders(token);
       console.log('API Response:', response);
+      console.log('User ID:', user.id);
 
       if (!Array.isArray(response)) {
         throw new Error('API response is not an array');
       }
 
       // Filter orders based on the logged-in laborer's ID
-      const laborerOrders = response.filter(order => 
-        Number(order.laborerId) === user.id
-      );
+      const laborerOrders = response.filter(order => {
+        const orderLaborerId = typeof order.laborerId === 'string' ? parseInt(order.laborerId, 10) : order.laborerId;
+        console.log('Order Laborer ID:', orderLaborerId, 'User ID:', user.id);
+        return orderLaborerId === user.id;
+      });
 
       console.log('Filtered Orders:', laborerOrders);
       setOrders(laborerOrders);

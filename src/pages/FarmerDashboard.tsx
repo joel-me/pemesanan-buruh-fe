@@ -60,15 +60,18 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
 
       const response = await getMyPlacedOrders(token);
       console.log('API Response:', response);
+      console.log('User ID:', user.id);
 
       if (!Array.isArray(response)) {
         throw new Error('API response is not an array');
       }
 
       // Filter orders based on the logged-in farmer's ID
-      const farmerOrders = response.filter(order => 
-        Number(order.farmerId) === user.id
-      );
+      const farmerOrders = response.filter(order => {
+        const orderFarmerId = typeof order.farmerId === 'string' ? parseInt(order.farmerId, 10) : order.farmerId;
+        console.log('Order Farmer ID:', orderFarmerId, 'User ID:', user.id);
+        return orderFarmerId === user.id;
+      });
 
       console.log('Filtered Orders:', farmerOrders);
 
