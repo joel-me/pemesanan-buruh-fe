@@ -20,7 +20,11 @@ const FarmerDashboard: React.FC = () => {
         'id' in order &&
         'farmerId' in order &&
         'laborerId' in order &&
-        'status' in order
+        'status' in order &&
+        'description' in order && // Ensure description exists
+        'createdAt' in order &&   // Ensure createdAt exists
+        'updatedAt' in order &&   // Ensure updatedAt exists
+        ('laborer' in order ? typeof order.laborer === 'object' && order.laborer !== null : true) // Optional laborer object
       );
     } catch (err) {
       console.error('Order validation error:', err);
@@ -33,34 +37,25 @@ const FarmerDashboard: React.FC = () => {
       setError(null);
       setLoading(true);
       const token = getToken();
-      
+
       // First validate the token exists
       if (!token) {
         throw new Error('Authentication token not found');
       }
 
       const response = await getMyPlacedOrders(token);
-      
+
       // Debugging: Log the raw response
       console.log('API Response:', response);
 
-      // Validate the response structure
-      if (!response || typeof response !== 'object') {
-        throw new Error('API returned invalid response format');
-      }
-
-      // Check if data exists and is an array
-      if (!('data' in response)) {
-        throw new Error('API response missing data field');
-      }
-
-      if (!Array.isArray(response.data)) {
-        throw new Error('API data is not an array');
+      // Validate the response structure - now we expect an array directly
+      if (!Array.isArray(response)) {
+        throw new Error('API response is not an array');
       }
 
       // Validate each order in the array
       const validatedOrders: Order[] = [];
-      for (const item of response.data) {
+      for (const item of response) { // Iterate directly over the response
         if (validateOrder(item)) {
           validatedOrders.push(item);
         } else {
@@ -68,7 +63,7 @@ const FarmerDashboard: React.FC = () => {
         }
       }
 
-      if (validatedOrders.length === 0 && response.data.length > 0) {
+      if (validatedOrders.length === 0 && response.length > 0) {
         throw new Error('No valid orders found in response');
       }
 
@@ -76,8 +71,8 @@ const FarmerDashboard: React.FC = () => {
     } catch (error) {
       console.error('Order fetch error:', error);
       setError(
-        error instanceof Error 
-          ? error.message 
+        error instanceof Error
+          ? error.message
           : 'An unknown error occurred while fetching orders'
       );
       setOrders([]);
@@ -90,8 +85,8 @@ const FarmerDashboard: React.FC = () => {
     fetchOrders();
   }, [getToken]);
 
-  const activeOrders = orders.filter(order => order.status === 'pending');
-  const completedOrders = orders.filter(order => order.status === 'completed');
+  const activeOrders = orders.filter(order => order.status.toLowerCase() === 'pending');
+  const completedOrders = orders.filter(order => order.status.toLowerCase() === 'completed');
 
   const renderOrderCard = (order: Order, bgClass: string, textClass: string) => (
     <div key={order.id} className={`border p-4 rounded-lg mb-2 ${bgClass}`}>
@@ -99,12 +94,13 @@ const FarmerDashboard: React.FC = () => {
         {order.laborer?.name || 'Nama buruh'} - <span className={textClass}>{order.status}</span>
       </p>
       <p className="text-gray-700">{order.description}</p>
+      {/* You can add more details here if needed */}
     </div>
   );
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      {/* Header remains the same */}
+      {/* Header */}
       <header className="bg-white shadow p-6 rounded-xl mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Dashboard Petani</h1>
@@ -113,6 +109,7 @@ const FarmerDashboard: React.FC = () => {
         <Button onClick={() => { logout(); navigate('/login'); }}>Keluar</Button>
       </header>
 
+      {/* Order Management Section */}
       <section className="space-y-8">
         <div className="bg-white p-6 rounded-xl shadow">
           <div className="flex justify-between items-center mb-4">
@@ -128,9 +125,9 @@ const FarmerDashboard: React.FC = () => {
             <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
               <p className="text-red-600 font-medium">Error: {error}</p>
               <p className="text-sm text-red-500 mb-2">Please check your connection and try again</p>
-              <Button 
-                variant="outline" 
-                className="mt-2" 
+              <Button
+                variant="outline"
+                className="mt-2"
                 onClick={fetchOrders}
               >
                 Coba Lagi
@@ -138,7 +135,7 @@ const FarmerDashboard: React.FC = () => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Order display sections remain the same */}
+              {/* Active Orders */}
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pesanan Aktif</h3>
                 {activeOrders.length > 0 ? (
@@ -150,6 +147,7 @@ const FarmerDashboard: React.FC = () => {
                 )}
               </div>
 
+              {/* Completed Orders */}
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pesanan Selesai</h3>
                 {completedOrders.length > 0 ? (
@@ -164,6 +162,8 @@ const FarmerDashboard: React.FC = () => {
           )}
         </div>
       </section>
+
+      {/* Add other sections for Farmer Dashboard if needed */}
     </div>
   );
 };
