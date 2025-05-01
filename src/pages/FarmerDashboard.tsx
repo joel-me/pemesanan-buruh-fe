@@ -29,10 +29,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
         typeof order.status === 'string' &&
         'description' in order &&
         typeof order.description === 'string' &&
-        'createdAt' in order &&
-        typeof order.createdAt === 'string' &&
-        'updatedAt' in order &&
-        typeof order.updatedAt === 'string' &&
+        // Make createdAt and updatedAt optional based on the API response
+        ('createdAt' in order ? typeof order.createdAt === 'string' : true) &&
+        ('updatedAt' in order ? typeof order.updatedAt === 'string' : true) &&
         ('laborer' in order
           ? typeof order.laborer === 'object' && order.laborer !== null && 'name' in order.laborer && typeof order.laborer.name === 'string'
           : true)
