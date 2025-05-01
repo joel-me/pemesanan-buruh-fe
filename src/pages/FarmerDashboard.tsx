@@ -16,16 +16,26 @@ const FarmerDashboard: React.FC = () => {
       try {
         const token = getToken();
         const response = await getMyPlacedOrders(token);
-        setOrders(response.data);
+
+        // Log the response to check the data format
+        console.log(response);
+
+        if (response.data && Array.isArray(response.data)) {
+          setOrders(response.data);
+        } else {
+          console.error('Data pesanan tidak valid:', response.data);
+          setOrders([]); // Fallback if data is invalid
+        }
       } catch (error) {
         console.error('Gagal mengambil pesanan:', error);
+        setOrders([]); // Fallback in case of error
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrders();
-  }, []);
+  }, [getToken]);
 
   const activeOrders = orders.filter(order => order.status === 'pending');
   const completedOrders = orders.filter(order => order.status === 'completed');
