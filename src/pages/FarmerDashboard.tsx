@@ -16,8 +16,8 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import { Loader2 } from "lucide-react";
-import { format } from "date-fns";
-import { id } from "date-fns/locale";
+import { format } from "date-fns"; // Importing format function from date-fns
+import { id } from "date-fns/locale"; // Importing Indonesian locale for date-fns
 
 // Tipe status untuk membantu TypeScript
 type OrderStatus = "pending" | "accepted" | "completed" | "cancelled";
