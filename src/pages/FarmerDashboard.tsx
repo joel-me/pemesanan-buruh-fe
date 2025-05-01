@@ -5,11 +5,13 @@ import { getMyPlacedOrders } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { Order } from '../lib/types';
 
-const FarmerDashboard: React.FC = () => {
+interface FarmerDashboardProps {}
+
+const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
   const { user, logout, getToken } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const validateOrder = (order: unknown): order is Order => {
@@ -18,13 +20,22 @@ const FarmerDashboard: React.FC = () => {
         typeof order === 'object' &&
         order !== null &&
         'id' in order &&
+        typeof order.id === 'number' &&
         'farmerId' in order &&
+        typeof order.farmerId === 'number' &&
         'laborerId' in order &&
+        typeof order.laborerId === 'number' &&
         'status' in order &&
-        'description' in order && // Ensure description exists
-        'createdAt' in order &&   // Ensure createdAt exists
-        'updatedAt' in order &&   // Ensure updatedAt exists
-        ('laborer' in order ? typeof order.laborer === 'object' && order.laborer !== null : true) // Optional laborer object
+        typeof order.status === 'string' &&
+        'description' in order &&
+        typeof order.description === 'string' &&
+        'createdAt' in order &&
+        typeof order.createdAt === 'string' &&
+        'updatedAt' in order &&
+        typeof order.updatedAt === 'string' &&
+        ('laborer' in order
+          ? typeof order.laborer === 'object' && order.laborer !== null && 'name' in order.laborer && typeof order.laborer.name === 'string'
+          : true)
       );
     } catch (err) {
       console.error('Order validation error:', err);
@@ -38,24 +49,20 @@ const FarmerDashboard: React.FC = () => {
       setLoading(true);
       const token = getToken();
 
-      // First validate the token exists
       if (!token) {
         throw new Error('Authentication token not found');
       }
 
       const response = await getMyPlacedOrders(token);
 
-      // Debugging: Log the raw response
       console.log('API Response:', response);
 
-      // Validate the response structure - now we expect an array directly
       if (!Array.isArray(response)) {
         throw new Error('API response is not an array');
       }
 
-      // Validate each order in the array
       const validatedOrders: Order[] = [];
-      for (const item of response) { // Iterate directly over the response
+      for (const item of response) {
         if (validateOrder(item)) {
           validatedOrders.push(item);
         } else {
@@ -68,13 +75,9 @@ const FarmerDashboard: React.FC = () => {
       }
 
       setOrders(validatedOrders);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Order fetch error:', error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : 'An unknown error occurred while fetching orders'
-      );
+      setError(error?.message || 'An unknown error occurred while fetching orders');
       setOrders([]);
     } finally {
       setLoading(false);
@@ -85,8 +88,8 @@ const FarmerDashboard: React.FC = () => {
     fetchOrders();
   }, [getToken]);
 
-  const activeOrders = orders.filter(order => order.status.toLowerCase() === 'pending');
-  const completedOrders = orders.filter(order => order.status.toLowerCase() === 'completed');
+  const activeOrders = orders.filter(order => order.status?.toLowerCase() === 'pending');
+  const completedOrders = orders.filter(order => order.status?.toLowerCase() === 'completed');
 
   const renderOrderCard = (order: Order, bgClass: string, textClass: string) => (
     <div key={order.id} className={`border p-4 rounded-lg mb-2 ${bgClass}`}>
@@ -94,13 +97,11 @@ const FarmerDashboard: React.FC = () => {
         {order.laborer?.name || 'Nama buruh'} - <span className={textClass}>{order.status}</span>
       </p>
       <p className="text-gray-700">{order.description}</p>
-      {/* You can add more details here if needed */}
     </div>
   );
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      {/* Header */}
       <header className="bg-white shadow p-6 rounded-xl mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Dashboard Petani</h1>
@@ -109,7 +110,6 @@ const FarmerDashboard: React.FC = () => {
         <Button onClick={() => { logout(); navigate('/login'); }}>Keluar</Button>
       </header>
 
-      {/* Order Management Section */}
       <section className="space-y-8">
         <div className="bg-white p-6 rounded-xl shadow">
           <div className="flex justify-between items-center mb-4">
@@ -135,7 +135,6 @@ const FarmerDashboard: React.FC = () => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Active Orders */}
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pesanan Aktif</h3>
                 {activeOrders.length > 0 ? (
@@ -147,7 +146,6 @@ const FarmerDashboard: React.FC = () => {
                 )}
               </div>
 
-              {/* Completed Orders */}
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pesanan Selesai</h3>
                 {completedOrders.length > 0 ? (
@@ -162,8 +160,6 @@ const FarmerDashboard: React.FC = () => {
           )}
         </div>
       </section>
-
-      {/* Add other sections for Farmer Dashboard if needed */}
     </div>
   );
 };
