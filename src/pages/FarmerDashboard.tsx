@@ -114,6 +114,7 @@ export default function FarmerDashboard() {
           return;
         }
         const fetchedOrders = await fetchOrders(token);
+        console.log("Fetched Orders:", fetchedOrders); // Tambahkan log untuk memeriksa data yang diterima
         setOrders(fetchedOrders);
       } catch (err) {
         setError("Gagal memuat pesanan");
@@ -200,8 +201,7 @@ export default function FarmerDashboard() {
                   (orders || [])
                     .filter(
                       (order) =>
-                        order.status === "pending" ||
-                        order.status === "accepted"
+                        order.status === "pending" || order.status === "accepted"
                     )
                     .map((order) => (
                       <Card key={order.id} className="mb-4">
