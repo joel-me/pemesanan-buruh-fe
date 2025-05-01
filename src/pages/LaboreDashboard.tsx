@@ -24,6 +24,10 @@ export default function LaboreDashboard() {
         throw new Error("Token tidak ditemukan");
       }
 
+      if (!user?.id) {
+        throw new Error("ID buruh tidak ditemukan");
+      }
+
       const response = await getMyOrders(token);
       console.log('API Response:', response);
 
@@ -31,7 +35,13 @@ export default function LaboreDashboard() {
         throw new Error('API response is not an array');
       }
 
-      setOrders(response);
+      // Filter orders based on the logged-in laborer's ID
+      const laborerOrders = response.filter(order => 
+        Number(order.laborerId) === user.id
+      );
+
+      console.log('Filtered Orders:', laborerOrders);
+      setOrders(laborerOrders);
     } catch (err: any) {
       console.error('Order fetch error:', err);
       setError(err?.message || 'Gagal memuat data pesanan');

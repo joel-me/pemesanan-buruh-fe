@@ -65,11 +65,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
         throw new Error('API response is not an array');
       }
 
-      // Filter orders based on the logged-in user's ID
-      const userOrders = response.filter(order => order.farmerId === user.id);
+      // Filter orders based on the logged-in farmer's ID
+      const farmerOrders = response.filter(order => 
+        Number(order.farmerId) === user.id
+      );
+
+      console.log('Filtered Orders:', farmerOrders);
 
       const validatedOrders: Order[] = [];
-      for (const item of userOrders) {
+      for (const item of farmerOrders) {
         if (validateOrder(item)) {
           validatedOrders.push(item);
         } else {
@@ -78,7 +82,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
       }
       console.log("Validated Orders:", validatedOrders);
 
-      if (validatedOrders.length === 0 && userOrders.length > 0) {
+      if (validatedOrders.length === 0 && farmerOrders.length > 0) {
         throw new Error('No valid orders found in response');
       }
 
