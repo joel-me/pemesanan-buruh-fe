@@ -2,19 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -55,11 +44,9 @@ const fetchOrders = async (token: string) => {
         },
       }
     );
-
     if (!response.ok) {
       throw new Error("Failed to fetch farmer orders");
     }
-
     const result = await response.json();
     return result.data as Order[];
   } catch (error) {
@@ -84,11 +71,9 @@ const updateOrderStatus = async (
         body: JSON.stringify({ status: newStatus }),
       }
     );
-
     if (!response.ok) {
       throw new Error("Failed to update order status");
     }
-
     const result = await response.json();
     return result.data;
   } catch (error) {
@@ -213,46 +198,19 @@ export default function FarmerDashboard() {
                           order.status === "pending" || order.status === "accepted"
                       )
                       .map((order) => (
-                        <Card key={order.id} className="mb-4">
-                          <CardHeader>
-                            <CardTitle>{order.laborer.username}</CardTitle>
-                            <CardDescription>{order.description}</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className={`badge ${styles[order.status]}`}>
-                              {label[order.status] ?? order.status}
-                            </div>
-                            <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
-                            <div>Tanggal Selesai: {formatDate(order.endDate)}</div>
-
-                            {order.status === "pending" && (
-                              <Button
-                                onClick={() => handleStatusUpdate(order.id, "accepted")}
-                                className="bg-blue-600 hover:bg-blue-700"
-                              >
-                                Terima Pesanan
-                              </Button>
-                            )}
-
-                            {order.status === "accepted" && (
-                              <>
-                                <Button
-                                  onClick={() => handleStatusUpdate(order.id, "completed")}
-                                  className="bg-green-600 hover:bg-green-700 mr-2"
-                                >
-                                  Tandai Selesai
-                                </Button>
-
-                                <Button
-                                  onClick={() => handleStatusUpdate(order.id, "cancelled")}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Batalkan Pesanan
-                                </Button>
-                              </>
-                            )}
-                          </CardContent>
-                        </Card>
+                        <div key={order.id} className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}>
+                          <h3 className="text-lg font-semibold">{order.description}</h3>
+                          <p className="text-sm">Dari Buruh: {order.laborer.username}</p>
+                          <p className="text-sm">Tanggal Mulai: {formatDate(order.startDate)}</p>
+                          <p className="text-sm">Tanggal Selesai: {formatDate(order.endDate)}</p>
+                          <div className="mt-2">
+                          <Button variant="outline"
+                              onClick={() => handleStatusUpdate(order.id, "completed")}
+                            >
+                              Tandai Selesai
+                            </Button>
+                          </div>
+                        </div>
                       ))
                   )
                 )}
@@ -270,12 +228,12 @@ export default function FarmerDashboard() {
                     orders
                       .filter((order) => order.status === "completed")
                       .map((order) => (
-                        <Card key={order.id} className="mb-4">
-                          <CardHeader>
-                            <CardTitle>{order.laborer.username}</CardTitle>
-                            <CardDescription>{order.description}</CardDescription>
-                          </CardHeader>
-                        </Card>
+                        <div key={order.id} className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}>
+                          <h3 className="text-lg font-semibold">{order.description}</h3>
+                          <p className="text-sm">Dari Buruh: {order.laborer.username}</p>
+                          <p className="text-sm">Tanggal Mulai: {formatDate(order.startDate)}</p>
+                          <p className="text-sm">Tanggal Selesai: {formatDate(order.endDate)}</p>
+                        </div>
                       ))
                   )
                 )}
