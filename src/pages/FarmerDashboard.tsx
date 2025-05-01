@@ -197,64 +197,56 @@ export default function FarmerDashboard() {
                 ) : error ? (
                   <div className="text-red-600">{error}</div>
                 ) : (
-                  (orders || [])
-                    .filter(
-                      (order) =>
-                        order.status === "pending" ||
-                        order.status === "accepted"
-                    )
-                    .map((order) => (
-                      <Card key={order.id} className="mb-4">
-                        <CardHeader>
-                          <CardTitle>{order.laborer.username}</CardTitle>
-                          <CardDescription>{order.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div
-                            className={`badge ${styles[order.status]}`}
-                          >
-                            {label[order.status] ?? order.status}
-                          </div>
-                          <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
-                          <div>
-                            Tanggal Selesai: {formatDate(order.endDate)}
-                          </div>
+                  orders.filter(
+                    (order) => order.status === "pending" || order.status === "accepted"
+                  ).length === 0 ? (
+                    <div className="text-center text-gray-600">Tidak ada pesanan aktif</div>
+                  ) : (
+                    orders
+                      .filter((order) => order.status === "pending" || order.status === "accepted")
+                      .map((order) => (
+                        <Card key={order.id} className="mb-4">
+                          <CardHeader>
+                            <CardTitle>{order.laborer.username}</CardTitle>
+                            <CardDescription>{order.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className={`badge ${styles[order.status]}`}>
+                              {label[order.status] ?? order.status}
+                            </div>
+                            <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
+                            <div>Tanggal Selesai: {formatDate(order.endDate)}</div>
 
-                          {order.status === "pending" && (
-                            <Button
-                              onClick={() =>
-                                handleStatusUpdate(order.id, "accepted")
-                              }
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              Terima Pesanan
-                            </Button>
-                          )}
-
-                          {order.status === "accepted" && (
-                            <>
+                            {order.status === "pending" && (
                               <Button
-                                onClick={() =>
-                                  handleStatusUpdate(order.id, "completed")
-                                }
-                                className="bg-green-600 hover:bg-green-700 mr-2"
+                                onClick={() => handleStatusUpdate(order.id, "accepted")}
+                                className="bg-blue-600 hover:bg-blue-700"
                               >
-                                Tandai Selesai
+                                Terima Pesanan
                               </Button>
+                            )}
 
-                              <Button
-                                onClick={() =>
-                                  handleStatusUpdate(order.id, "cancelled")
-                                }
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Batalkan Pesanan
-                              </Button>
-                            </>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))
+                            {order.status === "accepted" && (
+                              <>
+                                <Button
+                                  onClick={() => handleStatusUpdate(order.id, "completed")}
+                                  className="bg-green-600 hover:bg-green-700 mr-2"
+                                >
+                                  Tandai Selesai
+                                </Button>
+
+                                <Button
+                                  onClick={() => handleStatusUpdate(order.id, "cancelled")}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Batalkan Pesanan
+                                </Button>
+                              </>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))
+                  )
                 )}
               </TabsContent>
 
@@ -264,27 +256,27 @@ export default function FarmerDashboard() {
                 ) : error ? (
                   <div className="text-red-600">{error}</div>
                 ) : (
-                  (orders || [])
-                    .filter((order) => order.status === "completed")
-                    .map((order) => (
-                      <Card key={order.id} className="mb-4">
-                        <CardHeader>
-                          <CardTitle>{order.laborer.username}</CardTitle>
-                          <CardDescription>{order.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div
-                            className={`badge ${styles[order.status]}`}
-                          >
-                            {label[order.status] ?? order.status}
-                          </div>
-                          <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
-                          <div>
-                            Tanggal Selesai: {formatDate(order.endDate)}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
+                  orders.filter((order) => order.status === "completed").length === 0 ? (
+                    <div className="text-center text-gray-600">Tidak ada pesanan selesai</div>
+                  ) : (
+                    orders
+                      .filter((order) => order.status === "completed")
+                      .map((order) => (
+                        <Card key={order.id} className="mb-4">
+                          <CardHeader>
+                            <CardTitle>{order.laborer.username}</CardTitle>
+                            <CardDescription>{order.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className={`badge ${styles[order.status]}`}>
+                              {label[order.status] ?? order.status}
+                            </div>
+                            <div>Tanggal Mulai: {formatDate(order.startDate)}</div>
+                            <div>Tanggal Selesai: {formatDate(order.endDate)}</div>
+                          </CardContent>
+                        </Card>
+                      ))
+                  )
                 )}
               </TabsContent>
             </Tabs>

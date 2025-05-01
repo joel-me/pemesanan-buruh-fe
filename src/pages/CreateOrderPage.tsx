@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -15,8 +13,8 @@ import { createOrder } from "../lib/api"
 
 // Define the types for formData
 interface FormData {
+  laborerId: string
   description: string
-  location: string
   startDate: string
   endDate: string
   wage: string
@@ -24,13 +22,13 @@ interface FormData {
 
 export default function CreateOrderPage() {
   const navigate = useNavigate()
-  const { isAuthenticated, getToken } = useAuth() // Updated to use isAuthenticated and getToken
+  const { isAuthenticated, getToken } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<FormData>({
+    laborerId: "",
     description: "",
-    location: "",
     startDate: "",
     endDate: "",
     wage: "",
@@ -43,10 +41,8 @@ export default function CreateOrderPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     const token = getToken()
 
-    // Validate if the user is authenticated and has a token
     if (!token || !isAuthenticated) {
       setError("Anda harus login untuk membuat pesanan.")
       return
@@ -56,16 +52,14 @@ export default function CreateOrderPage() {
     setError(null)
 
     try {
-      // Call API to create order
       await createOrder(token, {
+        laborerId: Number.parseInt(formData.laborerId),
         description: formData.description,
-        location: formData.location,
+        wage: Number.parseFloat(formData.wage),
         startDate: formData.startDate,
         endDate: formData.endDate,
-        wage: Number.parseFloat(formData.wage),
       })
 
-      // Redirect to dashboard if the order is created successfully
       navigate("/dashboard")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal membuat pesanan.")
@@ -74,9 +68,8 @@ export default function CreateOrderPage() {
     }
   }
 
-  // Redirect if the user is not authenticated
   if (!isAuthenticated) {
-    navigate("/login") // Redirect to login page if the user is not authenticated
+    navigate("/login")
     return null
   }
 
@@ -96,6 +89,20 @@ export default function CreateOrderPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="laborerId">ID Buruh</Label>
+                <Input
+                  id="laborerId"
+                  name="laborerId"
+                  type="number"
+                  value={formData.laborerId}
+                  onChange={handleChange}
+                  placeholder="Masukkan ID buruh"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="description">Deskripsi Pekerjaan</Label>
                 <Textarea
                   id="description"
@@ -106,19 +113,6 @@ export default function CreateOrderPage() {
                   required
                   disabled={isLoading}
                   className="min-h-[100px]"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="location">Lokasi</Label>
-                <Input
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="Alamat lokasi pekerjaan"
-                  required
-                  disabled={isLoading}
                 />
               </div>
 
