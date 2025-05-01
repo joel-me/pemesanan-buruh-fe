@@ -1,114 +1,99 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Card } from "../components/ui/card";
-import { Alert, AlertDescription } from "../components/ui/alert";
-import { Loader2 } from "lucide-react";
-import { login as loginApi } from "../lib/api"; // Import the correct login function
-import { useAuth } from "../lib/auth-context"; // Import useAuth hook
+import { useAuth } from "../lib/auth-context";
 
-export default function LoginPage() {
-  const { login: setLogin } = useAuth(); // Using login from context
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+// Tambahkan tipe data response login
+interface LoginResponse {
+  statusCode: number;
+  message: string;
+  data: {
+    user: {
+      id: number | string;
+      username: string;
+      email: string;
+      role: "farmer" | "laborer";
+    };
+    access_token: string;
   };
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const LoginPage = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
     try {
-      // Call the login API with username and password
-      const response = await loginApi(formData); // Assuming login returns { data: { token, user } }
+      const response = await axios.post<LoginResponse>(
+        "https://web-pemesanan-buruh-be.vercel.app/api/auth/login",
+        {
+          username,
+          password,
+        }
+      );
 
-      // Store both user and token in context
-      setLogin(response.data.user, response.data.token);
+      const { user, access_token } = response.data.data;
 
-      // Navigate to the appropriate dashboard based on role
-      if (response.data.user.role === "laborer") {
-        navigate("/dashboard/laborer");
-      } else if (response.data.user.role === "farmer") {
+      // Panggil login dari AuthContext
+      login(
+        {
+          id: Number(user.id), // pastikan id number
+          username: user.username,
+          role: user.role,
+        },
+        access_token
+      );
+
+      // Redirect berdasarkan role
+      if (user.role === "farmer") {
         navigate("/dashboard/farmer");
       } else {
-        navigate("/dashboard"); // Default if no role matches
+        navigate("/dashboard/laborer");
       }
-    } catch (err) {
-      setError("Login failed, please try again.");
-    } finally {
-      setIsLoading(false);
+    } catch (err: any) {
+      console.error(err);
+      setError("Username atau password salah");
     }
   };
 
   return (
-    <div className="min-h-screen bg-green-600 py-8">
-      <div className="container mx-auto px-4">
-        <Card className="max-w-2xl mx-auto p-6">
-          <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
-
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="pt-4">
-              <Button
-                type="submit"
-                className="w-full bg-green-600 hover:bg-green-700"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Login"
-                )}
-              </Button>
-            </div>
-          </form>
-        </Card>
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <form onSubmit={handleLogin} className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Username</label>
+          <input
+            type="text"
+            className="w-full border rounded px-3 py-2"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">Password</label>
+          <input
+            type="password"
+            className="w-full border rounded px-3 py-2"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-200"
+        >
+          Login
+        </button>
+      </form>
     </div>
   );
-}
+};
+
+export default LoginPage;
