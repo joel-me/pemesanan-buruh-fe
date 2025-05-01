@@ -57,12 +57,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
       const response = await getMyPlacedOrders(token);
       console.log('API Response:', response);
 
-      if (!response.data || !Array.isArray(response.data)) {
-        throw new Error('Invalid API response format');
+      if (!Array.isArray(response)) {
+        throw new Error('API response is not an array');
       }
 
       const validatedOrders: Order[] = [];
-      for (const item of response.data) {
+      for (const item of response) {
         if (validateOrder(item)) {
           validatedOrders.push(item);
         } else {
@@ -71,7 +71,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
       }
       console.log("Validated Orders:", validatedOrders);
 
-      if (validatedOrders.length === 0 && response.data.length > 0) {
+      if (validatedOrders.length === 0 && response.length > 0) {
         throw new Error('No valid orders found in response');
       }
 
