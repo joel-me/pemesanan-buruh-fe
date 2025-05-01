@@ -57,12 +57,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
       const response = await getMyPlacedOrders(token);
       console.log('API Response:', response);
 
-      if (!Array.isArray(response)) {
-        throw new Error('API response is not an array');
+      if (!response.data || !Array.isArray(response.data)) {
+        throw new Error('Invalid API response format');
       }
 
       const validatedOrders: Order[] = [];
-      for (const item of response) {
+      for (const item of response.data) {
         if (validateOrder(item)) {
           validatedOrders.push(item);
         } else {
@@ -71,12 +71,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
       }
       console.log("Validated Orders:", validatedOrders);
 
-      if (validatedOrders.length === 0 && response.length > 0) {
+      if (validatedOrders.length === 0 && response.data.length > 0) {
         throw new Error('No valid orders found in response');
       }
 
       setOrders(validatedOrders);
-      console.log("Orders State:", orders);
     } catch (error: any) {
       console.error('Order fetch error:', error);
       setError(error?.message || 'An unknown error occurred while fetching orders');
@@ -95,11 +94,33 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
 
   // Render kartu pesanan
   const renderOrderCard = (order: Order, bgClass: string, textClass: string) => (
-    <div key={order.id} className={`border p-4 rounded-lg mb-2 ${bgClass}`}>
-      <p className="font-semibold">
-        {order.laborer?.username || 'Nama buruh'} - <span className={textClass}>{order.status}</span>
-      </p>
-      <p className="text-gray-700">{order.description}</p>
+    <div key={order.id} className={`border p-4 rounded-lg mb-4 ${bgClass} hover:shadow-md transition-shadow`}>
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <p className="font-semibold text-gray-800">
+            {order.laborer?.username || 'Nama buruh belum ditentukan'}
+          </p>
+          <p className={`text-sm ${textClass} font-medium`}>
+            Status: {order.status.toUpperCase()}
+          </p>
+        </div>
+        <span className="text-xs text-gray-500">
+          {new Date(order.createdAt).toLocaleDateString('id-ID')}
+        </span>
+      </div>
+      <p className="text-gray-700 mb-2">{order.description}</p>
+      <div className="flex justify-end">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => {
+            // TODO: Add order detail view
+            console.log('View order details:', order.id);
+          }}
+        >
+          Lihat Detail
+        </Button>
+      </div>
     </div>
   );
 
