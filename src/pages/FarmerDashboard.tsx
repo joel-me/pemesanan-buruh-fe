@@ -38,7 +38,7 @@ const fetchOrders = async (token: string) => {
     }
     const result = await response.json();
     console.log(result); // Log the result to check the structure of the data
-    return result.data as Order[];
+    return result.data || []; // Make sure to return an empty array if no data is present
   } catch (error) {
     throw new Error("Failed to fetch orders");
   }
@@ -47,7 +47,7 @@ const fetchOrders = async (token: string) => {
 export default function FarmerDashboard() {
   const navigate = useNavigate();
   const { isAuthenticated, getToken, logout } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]); // Initialize orders as an empty array
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,6 +77,14 @@ export default function FarmerDashboard() {
 
     loadOrders();
   }, [isAuthenticated, navigate, getToken]);
+
+  // Ensure orders is an array before applying .filter
+  const activeOrders = Array.isArray(orders)
+    ? orders.filter((order) => order.status === "PENDING" || order.status === "ACCEPTED")
+    : [];
+  const completedOrders = Array.isArray(orders)
+    ? orders.filter((order) => order.status === "COMPLETED")
+    : [];
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -121,28 +129,18 @@ export default function FarmerDashboard() {
                   <Loader2 className="animate-spin" />
                 ) : error ? (
                   <div className="text-red-600">{error}</div>
-                ) : orders.filter(
-                    (order) =>
-                      order.status === "PENDING" || order.status === "ACCEPTED"
-                  ).length === 0 ? (
+                ) : activeOrders.length === 0 ? (
                   <div className="text-center text-gray-600">Tidak ada pesanan aktif</div>
                 ) : (
-                  orders
-                    .filter(
-                      (order) =>
-                        order.status === "PENDING" || order.status === "ACCEPTED"
-                    )
-                    .map((order) => (
-                      <div
-                        key={order.id}
-                        className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}
-                      >
-                        <p className="text-lg font-semibold">
-                          {order.laborer.username}
-                        </p>
-                        <p className="text-sm">Status: {order.status}</p>
-                      </div>
-                    ))
+                  activeOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}
+                    >
+                      <p className="text-lg font-semibold">{order.laborer.username}</p>
+                      <p className="text-sm">Status: {order.status}</p>
+                    </div>
+                  ))
                 )}
               </TabsContent>
 
@@ -151,22 +149,18 @@ export default function FarmerDashboard() {
                   <Loader2 className="animate-spin" />
                 ) : error ? (
                   <div className="text-red-600">{error}</div>
-                ) : orders.filter((order) => order.status === "COMPLETED").length === 0 ? (
+                ) : completedOrders.length === 0 ? (
                   <div className="text-center text-gray-600">Tidak ada pesanan selesai</div>
                 ) : (
-                  orders
-                    .filter((order) => order.status === "COMPLETED")
-                    .map((order) => (
-                      <div
-                        key={order.id}
-                        className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}
-                      >
-                        <p className="text-lg font-semibold">
-                          {order.laborer.username}
-                        </p>
-                        <p className="text-sm">Status: {order.status}</p>
-                      </div>
-                    ))
+                  completedOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}
+                    >
+                      <p className="text-lg font-semibold">{order.laborer.username}</p>
+                      <p className="text-sm">Status: {order.status}</p>
+                    </div>
+                  ))
                 )}
               </TabsContent>
             </Tabs>
