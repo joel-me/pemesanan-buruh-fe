@@ -16,23 +16,20 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import { Loader2 } from "lucide-react";
-import { format } from "date-fns"; // Importing format function from date-fns
-import { id } from "date-fns/locale"; // Importing Indonesian locale for date-fns
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
-// Tipe status untuk membantu TypeScript
 type OrderStatus = "pending" | "accepted" | "completed" | "cancelled";
 
-// Tipe Order untuk data pesanan
 type Order = {
   id: string;
   description: string;
   startDate: string;
   endDate: string;
   status: OrderStatus;
-  laborer: { username: string }; // Asumsi laborer adalah yang menangani pesanan
+  laborer: { username: string };
 };
 
-// Styling dan label untuk setiap status
 const styles: Record<OrderStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800",
   accepted: "bg-blue-100 text-blue-800",
@@ -47,24 +44,27 @@ const label: Record<OrderStatus, string> = {
   cancelled: "Dibatalkan",
 };
 
-// Ambil hanya pesanan yang dibuat oleh petani yang login
 const fetchOrders = async (token: string) => {
-  const response = await fetch(
-    "https://web-pemesanan-buruh-be.vercel.app/api/orders/my-placed-orders",
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  try {
+    const response = await fetch(
+      "https://web-pemesanan-buruh-be.vercel.app/api/orders/my-placed-orders",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch farmer orders");
     }
-  );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch farmer orders");
+    const result = await response.json();
+    return result.data as Order[];
+  } catch (error) {
+    throw new Error("Gagal mengambil pesanan");
   }
-
-  const result = await response.json();
-  return result.data as Order[]; // Pastikan backend kirim dalam { data: [...] }
 };
 
 const updateOrderStatus = async (
@@ -72,30 +72,34 @@ const updateOrderStatus = async (
   orderId: string,
   newStatus: OrderStatus
 ) => {
-  const response = await fetch(
-    `https://web-pemesanan-buruh-be.vercel.app/api/orders/${orderId}/status`,
-    {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ status: newStatus }),
+  try {
+    const response = await fetch(
+      `https://web-pemesanan-buruh-be.vercel.app/api/orders/${orderId}/status`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to update order status");
     }
-  );
 
-  if (!response.ok) {
-    throw new Error("Failed to update order status");
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    throw new Error("Gagal memperbarui status pesanan");
   }
-
-  const result = await response.json();
-  return result.data;
 };
 
 export default function FarmerDashboard() {
   const navigate = useNavigate();
   const { isAuthenticated, getToken, logout } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]); // State untuk pesanan dengan tipe Order[]
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -198,12 +202,16 @@ export default function FarmerDashboard() {
                   <div className="text-red-600">{error}</div>
                 ) : (
                   orders.filter(
-                    (order) => order.status === "pending" || order.status === "accepted"
+                    (order) =>
+                      order.status === "pending" || order.status === "accepted"
                   ).length === 0 ? (
                     <div className="text-center text-gray-600">Tidak ada pesanan aktif</div>
                   ) : (
                     orders
-                      .filter((order) => order.status === "pending" || order.status === "accepted")
+                      .filter(
+                        (order) =>
+                          order.status === "pending" || order.status === "accepted"
+                      )
                       .map((order) => (
                         <Card key={order.id} className="mb-4">
                           <CardHeader>

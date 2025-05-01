@@ -5,6 +5,7 @@ import {
   LoginDto,
   RegisterFarmerDto,
   RegisterLaborerDto,
+  CreateOrderDto,
 } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -67,7 +68,7 @@ export const registerLaborer = async (data: RegisterLaborerDto): Promise<APIResp
 };
 
 // Orders API functions
-export const createOrder = async (token: string, orderData: any): Promise<APIResponse<Order>> => {
+export const createOrder = async (token: string, orderData: CreateOrderDto): Promise<APIResponse<Order>> => {
   const response = await fetch(`${API_PREFIX}/orders`, {
     method: 'POST',
     headers: {

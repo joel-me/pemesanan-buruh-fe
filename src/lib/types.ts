@@ -54,3 +54,10 @@ export type RegisterLaborerDto = {
     skills: string[];  // This needs to match
     experience: string;
 };
+export interface CreateOrderDto {
+    laborerId: number;
+    description: string;
+    wage: number;
+    startDate: string;
+    endDate: string;
+  }
