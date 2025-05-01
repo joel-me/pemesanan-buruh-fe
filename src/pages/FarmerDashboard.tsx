@@ -1,173 +1,80 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../lib/auth-context";
-import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { Button } from '../components/ui/button'; // Adjusted import if no 'ui' folder exists
+import { useAuth } from '../hooks/useAuth'; // Assuming you have the `useAuth` hook in the 'hooks' folder
 
-type OrderStatus = "PENDING" | "ACCEPTED" | "COMPLETED" | "CANCELLED";
-
-type Order = {
-  id: string;
+interface Order {
+  id: number;
+  farmerId: number;
+  laborerId: number;
+  status: string;
   description: string;
-  status: OrderStatus;
-  laborer: { username: string };
-};
+  laborerName: string;  // Assuming laborer name is part of the data
+}
 
-const styles: Record<OrderStatus, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  ACCEPTED: "bg-blue-100 text-blue-800",
-  COMPLETED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-red-100 text-red-800",
-};
+const FarmerDashboard: React.FC = () => {
+  const { user } = useAuth();  // Assuming you are using the `useAuth` hook
+  const [orders, setOrders] = useState<Order[]>([]);
 
-const fetchOrders = async (token: string) => {
-  try {
-    const response = await fetch(
-      "https://web-pemesanan-buruh-be.vercel.app/api/orders/my-placed-orders",
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch orders");
-    }
-    const result = await response.json();
-    console.log(result); // Log the result to check the structure of the data
-    return result.data || []; // Make sure to return an empty array if no data is present
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    throw new Error("Failed to fetch orders");
-  }
-};
-
-export default function FarmerDashboard() {
-  const navigate = useNavigate();
-  const { isAuthenticated, getToken, logout } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]); // Initialize orders as an empty array
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  // Fetch orders when the component mounts
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
+    // Fetch orders from API or a mock function
+    fetchOrders();
+  }, []);
 
-    const loadOrders = async () => {
-      setIsLoading(true);
-      try {
-        const token = getToken();
-        if (!token) {
-          setError("Token not found.");
-          return;
-        }
-        const fetchedOrders = await fetchOrders(token);
-        setOrders(fetchedOrders);
-      } catch (err) {
-        setError("Failed to load orders");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Mock fetchOrders function (replace with your actual API call)
+  const fetchOrders = () => {
+    const mockOrders = [
+      { id: 1, farmerId: 2, laborerId: 1, status: 'COMPLETED', description: 'with rice harvesting', laborerName: 'Buruh A' },
+      { id: 2, farmerId: 1, laborerId: 6, status: 'PENDING', description: 'pukul batu', laborerName: 'Buruh B' },
+    ];
+    setOrders(mockOrders);
+  };
 
-    loadOrders();
-  }, [isAuthenticated, navigate, getToken]);
-
-  // Ensure orders is an array before applying .filter
-  const activeOrders = Array.isArray(orders)
-    ? orders.filter((order) => order.status === "PENDING" || order.status === "ACCEPTED")
-    : [];
-  const completedOrders = Array.isArray(orders)
-    ? orders.filter((order) => order.status === "COMPLETED")
-    : [];
+  const activeOrders = orders.filter(order => order.status === 'PENDING');
+  const completedOrders = orders.filter(order => order.status === 'COMPLETED');
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-green-600 text-white p-4 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold">Dashboard Petani</h1>
-          <div className="flex items-center gap-4">
-            <span>Halo, Petani</span>
-            <Button
-              variant="outline"
-              className="text-white border-white hover:bg-green-700"
-              onClick={logout}
-            >
-              Keluar
-            </Button>
-          </div>
-        </div>
+    <div>
+      <header>
+        <h1>Dashboard Petani</h1>
+        <p>Halo, {user?.name}</p>
+        <Button onClick={() => console.log('Logout')}>Keluar</Button>
       </header>
 
-      <main className="container mx-auto py-8 px-4">
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Kelola Pesanan Anda</CardTitle>
-            <CardDescription>Kelola pesanan buruh tani Anda</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              className="bg-green-600 hover:bg-green-700 mb-4"
-              onClick={() => navigate("/orders/create")}
-            >
-              Buat Pesanan Baru
-            </Button>
+      <section>
+        <h2>Kelola Pesanan Anda</h2>
+        <Button onClick={() => console.log('Create Order')}>Buat Pesanan Baru</Button>
 
-            <Tabs defaultValue="active" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="active">Pesanan Aktif</TabsTrigger>
-                <TabsTrigger value="completed">Pesanan Selesai</TabsTrigger>
-              </TabsList>
+        <div>
+          <h3>Pesanan Aktif</h3>
+          {activeOrders.length > 0 ? (
+            activeOrders.map(order => (
+              <div key={order.id}>
+                <p><strong>{order.laborerName}</strong> - {order.status}</p>
+                <p>{order.description}</p>
+              </div>
+            ))
+          ) : (
+            <p>Tidak ada pesanan aktif</p>
+          )}
+        </div>
 
-              <TabsContent value="active">
-                {isLoading ? (
-                  <Loader2 className="animate-spin" />
-                ) : error ? (
-                  <div className="text-red-600">{error}</div>
-                ) : activeOrders.length === 0 ? (
-                  <div className="text-center text-gray-600">Tidak ada pesanan aktif</div>
-                ) : (
-                  activeOrders.map((order) => (
-                    <div
-                      key={order.id}
-                      className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}
-                    >
-                      <p className="text-lg font-semibold">{order.laborer.username}</p>
-                      <p className="text-sm">Status: {order.status}</p>
-                    </div>
-                  ))
-                )}
-              </TabsContent>
-
-              <TabsContent value="completed">
-                {isLoading ? (
-                  <Loader2 className="animate-spin" />
-                ) : error ? (
-                  <div className="text-red-600">{error}</div>
-                ) : completedOrders.length === 0 ? (
-                  <div className="text-center text-gray-600">Tidak ada pesanan selesai</div>
-                ) : (
-                  completedOrders.map((order) => (
-                    <div
-                      key={order.id}
-                      className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}
-                    >
-                      <p className="text-lg font-semibold">{order.laborer.username}</p>
-                      <p className="text-sm">Status: {order.status}</p>
-                    </div>
-                  ))
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </main>
+        <div>
+          <h3>Pesanan Selesai</h3>
+          {completedOrders.length > 0 ? (
+            completedOrders.map(order => (
+              <div key={order.id}>
+                <p><strong>{order.laborerName}</strong> - {order.status}</p>
+                <p>{order.description}</p>
+              </div>
+            ))
+          ) : (
+            <p>Tidak ada pesanan selesai</p>
+          )}
+        </div>
+      </section>
     </div>
   );
-}
+};
+
+export default FarmerDashboard;
