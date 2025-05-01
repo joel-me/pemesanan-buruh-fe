@@ -87,7 +87,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, [getToken]);
+  }, []);
 
   const activeOrders = orders.filter(order => order.status?.toLowerCase() === 'pending');
   const completedOrders = orders.filter(order => order.status?.toLowerCase() === 'completed');
@@ -138,7 +138,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
         <div className="bg-white p-6 rounded-xl shadow">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-800">Kelola Pesanan Anda</h2>
-            <Button onClick={() => navigate('/create-order')}>Buat Pesanan Baru</Button>
+            <Button onClick={() => navigate('/orders/create')}>Buat Pesanan Baru</Button>
           </div>
 
           {loading ? (
