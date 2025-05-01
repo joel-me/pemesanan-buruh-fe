@@ -2,28 +2,58 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
 import { Loader2 } from "lucide-react";
 
+type OrderStatus = "PENDING" | "ACCEPTED" | "COMPLETED" | "CANCELLED";
+
 type Order = {
-  id: string;
+  id: string | number;
   description: string;
-  status: string;
-  laborer: { username: string };
+  status: OrderStatus;
+  laborer: {
+    username: string;
+  };
+};
+
+const styles: Record<OrderStatus, string> = {
+  PENDING: "bg-yellow-100 text-yellow-800",
+  ACCEPTED: "bg-blue-100 text-blue-800",
+  COMPLETED: "bg-green-100 text-green-800",
+  CANCELLED: "bg-red-100 text-red-800",
 };
 
 const fetchOrders = async (token: string) => {
-  const response = await fetch(
-    "https://web-pemesanan-buruh-be.vercel.app/api/orders/my-placed-orders",
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  try {
+    const response = await fetch(
+      "https://web-pemesanan-buruh-be.vercel.app/api/orders/my-placed-orders",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch orders");
     }
-  );
-  if (!response.ok) throw new Error("Gagal mengambil pesanan");
-  const result = await response.json();
-  return result.data as Order[];
+    const result = await response.json();
+    return result.data as Order[];
+  } catch (error) {
+    throw new Error("Gagal mengambil pesanan");
+  }
 };
 
 export default function FarmerDashboard() {
@@ -40,13 +70,18 @@ export default function FarmerDashboard() {
     }
 
     const loadOrders = async () => {
+      setIsLoading(true);
       try {
         const token = getToken();
-        if (!token) return setError("Token tidak ditemukan");
+        if (!token) {
+          setError("Token tidak ditemukan.");
+          return;
+        }
         const fetchedOrders = await fetchOrders(token);
-        setOrders(fetchedOrders);
+        setOrders(fetchedOrders || []);
       } catch (err) {
         setError("Gagal memuat pesanan");
+        console.error(err);
       } finally {
         setIsLoading(false);
       }
@@ -61,7 +96,7 @@ export default function FarmerDashboard() {
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-xl font-bold">Dashboard Petani</h1>
           <div className="flex items-center gap-4">
-            <span>Halo, Petani</span>
+            <span>Halo, {isAuthenticated ? "Petani" : "Tamu"}</span>
             <Button
               variant="outline"
               className="text-white border-white hover:bg-green-700"
@@ -74,25 +109,76 @@ export default function FarmerDashboard() {
       </header>
 
       <main className="container mx-auto py-8 px-4">
-        <Card>
+        <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Daftar Pesanan</CardTitle>
+            <CardTitle>Kelola Pesanan Anda</CardTitle>
+            <CardDescription>Nama buruh & status pesanan</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <Loader2 className="animate-spin" />
-            ) : error ? (
-              <div className="text-red-600">{error}</div>
-            ) : orders.length === 0 ? (
-              <div className="text-center text-gray-600">Tidak ada pesanan</div>
-            ) : (
-              orders.map((order) => (
-                <div key={order.id} className="p-4 border-b border-gray-300">
-                  <p><strong>Nama Pekerja:</strong> {order.laborer?.username || "Tidak diketahui"}</p>
-                  <p><strong>Status:</strong> {order.status}</p>
-                </div>
-              ))
-            )}
+            <Button
+              className="bg-green-600 hover:bg-green-700 mb-4"
+              onClick={() => navigate("/orders/create")}
+            >
+              Buat Pesanan Baru
+            </Button>
+
+            <Tabs defaultValue="active" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="active">Pesanan Aktif</TabsTrigger>
+                <TabsTrigger value="completed">Pesanan Selesai</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="active">
+                {isLoading ? (
+                  <Loader2 className="animate-spin" />
+                ) : error ? (
+                  <div className="text-red-600">{error}</div>
+                ) : orders.filter(order => order.status === "PENDING" || order.status === "ACCEPTED").length === 0 ? (
+                  <div className="text-center text-gray-600">Tidak ada pesanan aktif</div>
+                ) : (
+                  orders
+                    .filter(
+                      (order) =>
+                        order.status === "PENDING" || order.status === "ACCEPTED"
+                    )
+                    .map((order) => (
+                      <div
+                        key={order.id}
+                        className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}
+                      >
+                        <p className="text-lg font-semibold">
+                          {order.laborer?.username}
+                        </p>
+                        <p className="text-sm">Status: {order.status}</p>
+                      </div>
+                    ))
+                )}
+              </TabsContent>
+
+              <TabsContent value="completed">
+                {isLoading ? (
+                  <Loader2 className="animate-spin" />
+                ) : error ? (
+                  <div className="text-red-600">{error}</div>
+                ) : orders.filter(order => order.status === "COMPLETED").length === 0 ? (
+                  <div className="text-center text-gray-600">Tidak ada pesanan selesai</div>
+                ) : (
+                  orders
+                    .filter((order) => order.status === "COMPLETED")
+                    .map((order) => (
+                      <div
+                        key={order.id}
+                        className={`p-4 mb-4 ${styles[order.status]} rounded-lg`}
+                      >
+                        <p className="text-lg font-semibold">
+                          {order.laborer?.username}
+                        </p>
+                        <p className="text-sm">Status: {order.status}</p>
+                      </div>
+                    ))
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </main>
