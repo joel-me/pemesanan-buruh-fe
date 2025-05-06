@@ -131,7 +131,7 @@ export const getLaborerData = async (token: string): Promise<APIResponse<any>> =
 
 // New function to get all laborers
 export const getAllLaborers = async (token: string): Promise<APIResponse<any[]>> => {
-  const response = await fetch(`${API_PREFIX}/laborer`, {
+  const response = await fetch(`${API_PREFIX}/users/laborers`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
