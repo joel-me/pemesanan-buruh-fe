@@ -20,6 +20,11 @@ export default function LaborerListPage() {
         const token = getToken();
         if (!token) throw new Error("Token tidak ditemukan");
         const response = await getAllLaborers(token);
+        // Debug log
+        console.log("Laborer API response:", response);
+        if (!Array.isArray(response.data)) {
+          throw new Error("Data buruh tidak valid");
+        }
         setLaborers(response.data);
       } catch (err: any) {
         setError(err.message || "Gagal memuat data buruh");
