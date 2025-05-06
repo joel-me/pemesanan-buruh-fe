@@ -9,6 +9,7 @@ import LaboreDashboard from "./pages/LaboreDashboard";
 import FarmerDashboard from "./pages/FarmerDashboard";
 import CreateOrderPage from "./pages/CreateOrderPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import LaborerListPage from "./pages/LaborerListPage";
 
 function App() {
   return (
@@ -36,6 +37,16 @@ function App() {
             element={
               <ProtectedRoute requiredRole="laborer">
                 <LaboreDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Only farmer can view laborer list */}
+          <Route
+            path="/laborers"
+            element={
+              <ProtectedRoute requiredRole="farmer">
+                <LaborerListPage />
               </ProtectedRoute>
             }
           />

@@ -128,3 +128,14 @@ export const getLaborerData = async (token: string): Promise<APIResponse<any>> =
 
   return handleFetchSuccess<any>(response);
 };
+
+// New function to get all laborers
+export const getAllLaborers = async (token: string): Promise<APIResponse<any[]>> => {
+  const response = await fetch(`${API_PREFIX}/laborer`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleFetchSuccess<any[]>(response);
+};
