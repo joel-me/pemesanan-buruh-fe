@@ -1,6 +1,6 @@
 import type React from "react"
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../lib/auth-context"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
@@ -25,6 +25,7 @@ export default function CreateOrderPage() {
   const { isAuthenticated, getToken } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const location = useLocation()
 
   const [formData, setFormData] = useState<FormData>({
     laborerId: "",
@@ -33,6 +34,18 @@ export default function CreateOrderPage() {
     endDate: "",
     wage: "",
   })
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const laborerIdFromQuery = params.get("laborerId")
+    if (laborerIdFromQuery) {
+      setFormData((prev) => ({
+        ...prev,
+        laborerId: laborerIdFromQuery,
+      }))
+    }
+    // eslint-disable-next-line
+  }, [location.search])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -98,7 +111,7 @@ export default function CreateOrderPage() {
                   onChange={handleChange}
                   placeholder="Masukkan ID buruh"
                   required
-                  disabled={isLoading}
+                  disabled={!!formData.laborerId || isLoading}
                 />
               </div>
 

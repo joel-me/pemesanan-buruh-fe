@@ -3,12 +3,14 @@ import { getAllLaborers } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
 import { Card } from "../components/ui/card";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import { useNavigate } from "react-router-dom";
 
 export default function LaborerListPage() {
   const { getToken } = useAuth();
   const [laborers, setLaborers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchLaborers = async () => {
@@ -63,13 +65,19 @@ export default function LaborerListPage() {
                   </tr>
                 ) : (
                   laborers.map((b, idx) => (
-                    <tr key={b.id || idx}>
+                    <tr
+                      key={b.id || idx}
+                      className="cursor-pointer hover:bg-green-50 transition"
+                      onClick={() => navigate(`/orders/create?laborerId=${b.id}`)}
+                    >
                       <td className="border px-4 py-2">{b.username}</td>
                       <td className="border px-4 py-2">{b.email}</td>
                       <td className="border px-4 py-2">{b.address}</td>
-                      <td className="border px-4 py-2">{b.phone}</td>
+                      <td className="border px-4 py-2">{b.phoneNumber}</td>
                       <td className="border px-4 py-2">{b.age}</td>
-                      <td className="border px-4 py-2">{b.skills.join(", ")}</td>
+                      <td className="border px-4 py-2">
+                        {Array.isArray(b.skills) ? b.skills.join(", ") : "-"}
+                      </td>
                     </tr>
                   ))
                 )}
