@@ -19,13 +19,8 @@ export default function LaborerListPage() {
       try {
         const token = getToken();
         if (!token) throw new Error("Token tidak ditemukan");
-        const response = await getAllLaborers(token);
-        // Debug log
-        console.log("Laborer API response:", response);
-        if (!Array.isArray(response.data)) {
-          throw new Error("Data buruh tidak valid");
-        }
-        setLaborers(response.data);
+        const laborers = await getAllLaborers(token);
+        setLaborers(laborers);
       } catch (err: any) {
         setError(err.message || "Gagal memuat data buruh");
       } finally {
@@ -55,16 +50,13 @@ export default function LaborerListPage() {
                 <tr>
                   <th className="border px-4 py-2">Nama</th>
                   <th className="border px-4 py-2">Email</th>
-                  <th className="border px-4 py-2">Alamat</th>
-                  <th className="border px-4 py-2">No. Telepon</th>
-                  <th className="border px-4 py-2">Umur</th>
                   <th className="border px-4 py-2">Keterampilan</th>
                 </tr>
               </thead>
               <tbody>
                 {laborers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-4 text-gray-500">
+                    <td colSpan={3} className="text-center py-4 text-gray-500">
                       Tidak ada buruh ditemukan.
                     </td>
                   </tr>
@@ -77,9 +69,6 @@ export default function LaborerListPage() {
                     >
                       <td className="border px-4 py-2">{b.username}</td>
                       <td className="border px-4 py-2">{b.email}</td>
-                      <td className="border px-4 py-2">{b.address}</td>
-                      <td className="border px-4 py-2">{b.phoneNumber}</td>
-                      <td className="border px-4 py-2">{b.age}</td>
                       <td className="border px-4 py-2">
                         {Array.isArray(b.skills) ? b.skills.join(", ") : "-"}
                       </td>
