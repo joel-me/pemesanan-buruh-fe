@@ -145,7 +145,14 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = () => {
           <h1 className="text-2xl font-bold text-gray-800">Dashboard Petani</h1>
           <p className="text-gray-600">Halo, {user?.username || 'Pengguna'}</p>
         </div>
-        <Button onClick={() => { logout(); navigate('/login'); }}>Keluar</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/laborers')}>
+            Lihat Daftar Buruh
+          </Button>
+          <Button onClick={() => { logout(); navigate('/login'); }}>
+            Keluar
+          </Button>
+        </div>
       </header>
 
       <section className="space-y-8">
